@@ -1,0 +1,69 @@
+spring:
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/moyeo # 테스트용 h2 DB 연결
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create  # 또는 create, none
+    show-sql: true  # SQL 로그 출력
+  h2:
+    console:
+      enabled: true  # H2 웹 콘솔 활성화
+      path: /h2-console  # 웹 콘솔 접속 경로
+  profiles:
+    include: oauth
+
+# OAuth2 변수설정
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_SECRET_KEY}
+            client-secret:
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+            scope:
+              - profile_nickname
+              - account_email
+            client-name: Kakao
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+            scope:
+              - profile
+              - email
+            client-name: Google
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+jwt:
+  secret: ${JWT_SECRET}
+  expirationMs: 86400000
+
+default:
+  image-url: ${DEFAULT_IMAGE}
+
+# s3
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: ap-northeast-2
+    credentials:
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
+    s3:
+      bucket: moyeo-s3-1
