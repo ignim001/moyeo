@@ -39,7 +39,6 @@ public class UserController {
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
         userService.updateProfile(userDetails, profileRequestDto, profileImage);
-        return new ResponseEntity.ok();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
 }
