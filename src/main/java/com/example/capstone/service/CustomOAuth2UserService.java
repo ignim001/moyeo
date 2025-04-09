@@ -38,8 +38,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         // OAuth2 제공자의 식별 ID 생성 (예: "kakao 123456789" or "google 987654321")
         String providerId = oAuth2Response.getProvider() + " " + oAuth2Response.getProviderId();
-        UserEntity existUser = userRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+        UserEntity existUser = userRepository.findByProviderId(providerId).orElse(null);
 
         // 기존 회원이면 바로 로그인 (JWT 발급)
         if (existUser != null) {
@@ -51,7 +50,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         // 신규 회원이면 임시 JWT 발급 (추가 정보 입력 유도)
         String tempToken = jwtUtil.generateToken(providerId, oAuth2Response.getEmail());
-        System.out.println("tempToken = " + tempToken);
         throw new OAuth2Exception("Additional information required", tempToken);
     }
 }

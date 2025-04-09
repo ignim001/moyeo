@@ -28,7 +28,7 @@ public class UserService {
     @Transactional
     public void signup(CustomOAuth2User customOAuth2User, UserProfileRequestDto dto, MultipartFile profileImage) {
         // 닉네임 중복 처리
-        if (!userRepository.existsByNickname(dto.getNickname())) {
+        if (userRepository.existsByNickname(dto.getNickname())) {
             throw new DuplicateNicknameException("Nickname already exists");
         }
 

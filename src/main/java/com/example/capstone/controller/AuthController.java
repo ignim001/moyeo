@@ -27,8 +27,8 @@ public class AuthController {
             @AuthenticationPrincipal CustomOAuth2User userDetails, // JWT에서 추출되 임시로 세션에 저장된 사용자 정보
             @Valid @RequestPart("userInfo") UserProfileRequestDto profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
         userService.signup(userDetails, profileRequestDto, profileImage);
         return ResponseEntity.ok("회원가입 성공");
     }
-
 }

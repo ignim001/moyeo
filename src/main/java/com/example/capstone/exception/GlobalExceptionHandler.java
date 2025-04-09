@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({UserNotFoundException.class, DuplicateNicknameException.class})
-    public ResponseEntity<ErrorDetails> handleUserException(UserNotFoundException ex, WebRequest request) {
+    public ResponseEntity<ErrorDetails> handleUserException(RuntimeException ex, WebRequest request) {
         ErrorDetails errorDetails =
                 new ErrorDetails(ex.getMessage(),
                         request.getDescription(false),
