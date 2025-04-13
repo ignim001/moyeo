@@ -1,20 +1,18 @@
 package com.example.capstone.dto.response;
 
+import com.example.capstone.entity.Gender;
+import com.example.capstone.entity.MBTI;
 import lombok.*;
 
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class UserProfileResponseDto {
+public class UserProfileResponse {
 
     private String nickname;
-
-    private String gender;
-
+    private Gender gender;
     private int age;
-
-    private String mbti;
-
+    private MBTI mbti;
     private String profileImageUrl;
 }

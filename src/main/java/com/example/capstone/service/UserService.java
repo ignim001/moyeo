@@ -1,8 +1,8 @@
 package com.example.capstone.service;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileRequestDto;
-import com.example.capstone.dto.response.UserProfileResponseDto;
+import com.example.capstone.dto.request.UserProfileRequest;
+import com.example.capstone.dto.response.UserProfileResponse;
 import com.example.capstone.entity.UserEntity;
 import com.example.capstone.exception.DuplicateNicknameException;
 import com.example.capstone.exception.UserNotFoundException;
@@ -26,7 +26,7 @@ public class UserService {
     private String DEFAULT_PROFILE_IMAGE_URL;
 
     @Transactional
-    public void signup(CustomOAuth2User customOAuth2User, UserProfileRequestDto dto, MultipartFile profileImage) {
+    public void signup(CustomOAuth2User userDetails, UserProfileRequest dto, MultipartFile profileImage) {
         // 닉네임 중복 처리
         if (userRepository.existsByNickname(dto.getNickname())) {
             throw new DuplicateNicknameException("Nickname already exists");
@@ -44,8 +44,8 @@ public class UserService {
         }
 
         UserEntity user = UserEntity.builder()
-                .providerId(customOAuth2User.getProviderId())
-                .email(customOAuth2User.getEmail())
+                .providerId(userDetails.getProviderId())
+                .email(userDetails.getEmail())
                 .nickname(dto.getNickname())
                 .age(dto.getAge())
                 .gender(dto.getGender())
@@ -57,11 +57,11 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserProfileResponseDto findUser(CustomOAuth2User customOAuth2User){
+    public UserProfileResponse findUser(CustomOAuth2User customOAuth2User){
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
-        return UserProfileResponseDto.builder()
+        return UserProfileResponse.builder()
                 .nickname(user.getNickname())
                 .age(user.getAge())
                 .gender(user.getGender())
@@ -71,7 +71,7 @@ public class UserService {
     }
 
     @Transactional
-    public void updateProfile(CustomOAuth2User customOAuth2User, UserProfileRequestDto dto, MultipartFile profileImage){
+    public void updateProfile(CustomOAuth2User customOAuth2User, UserProfileRequest dto, MultipartFile profileImage){
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
@@ -95,7 +95,7 @@ public class UserService {
             imageUrl = imageService.imageUpload(profileImage);
         }
 
-        user.changeProfile(dto.getNickname(), dto.getGender(), dto.getAge(), dto.getMbti(), imageUrl);
+        user.updateProfile(dto.getNickname(), dto.getGender(), dto.getAge(), dto.getMbti(), imageUrl);
         userRepository.save(user);
     }
 

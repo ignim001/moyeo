@@ -6,12 +6,15 @@ import lombok.*;
 @Entity
 @Getter
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class UserEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne(mappedBy = "user")
+    private MatchingProfile matchingProfile;
 
     // 사용자 식별자 (kakao + provider id)
     @Column(nullable = false)
@@ -24,18 +27,19 @@ public class UserEntity {
     private String nickname;
 
     @Column(nullable = false)
-    private String gender;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @Column(nullable = false)
     private int age;
 
-    @Column(nullable = true)
-    private String mbti;
+    @Enumerated(EnumType.STRING)
+    private MBTI mbti;
 
     @Column(nullable = false)
     private String profileImageUrl;
 
-    public void changeProfile(String nickname, String gender, int age, String mbti, String profileImageUrl) {
+    public void updateProfile(String nickname, Gender gender, int age, MBTI mbti, String profileImageUrl) {
         this.nickname = nickname;
         this.gender = gender;
         this.age = age;

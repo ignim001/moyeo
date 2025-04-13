@@ -1,13 +1,12 @@
 package com.example.capstone.controller;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileRequestDto;
-import com.example.capstone.dto.response.UserProfileResponseDto;
+import com.example.capstone.dto.request.UserProfileRequest;
+import com.example.capstone.dto.response.UserProfileResponse;
 import com.example.capstone.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +22,10 @@ public class UserController {
     @Operation(summary = "회원조회 API",
             description = "회원 수정시 화면에 출력할 회원정보 조회")
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponseDto> getUserProfile(
+    public ResponseEntity<UserProfileResponse> getUserProfile(
             @AuthenticationPrincipal CustomOAuth2User user
     ) {
-        UserProfileResponseDto findUser = userService.findUser(user);
+        UserProfileResponse findUser = userService.findUser(user);
         return ResponseEntity.ok(findUser);
     }
 
@@ -35,10 +34,10 @@ public class UserController {
     @PutMapping("/edit")
     public ResponseEntity<?> editUser(
             @AuthenticationPrincipal CustomOAuth2User userDetails, // JWT에서 추출되 임시로 세션에 저장된 사용자 정보
-            @Valid @RequestPart("userInfo") UserProfileRequestDto profileRequestDto,
+            @Valid @RequestPart("userInfo") UserProfileRequest profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
         userService.updateProfile(userDetails, profileRequestDto, profileImage);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.ok("회원정보 수정 성공");
     }
 }

@@ -1,27 +1,27 @@
 package com.example.capstone.dto.request;
 
-import jakarta.annotation.Nullable;
+import com.example.capstone.entity.Gender;
+import com.example.capstone.entity.MBTI;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class UserProfileRequestDto {
+public class UserProfileRequest {
 
     @NotBlank
     private String nickname;
 
     @NotBlank
-    private String gender;
+    private Gender gender;
 
     @NotNull
     private int age;
-
-    @Nullable
-    private String mbti;
+    private MBTI mbti;
 
 }

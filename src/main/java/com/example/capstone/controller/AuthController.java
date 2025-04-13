@@ -1,12 +1,11 @@
 package com.example.capstone.controller;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileRequestDto;
+import com.example.capstone.dto.request.UserProfileRequest;
 import com.example.capstone.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +24,7 @@ public class AuthController {
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> signup(
             @AuthenticationPrincipal CustomOAuth2User userDetails, // JWT에서 추출되 임시로 세션에 저장된 사용자 정보
-            @Valid @RequestPart("userInfo") UserProfileRequestDto profileRequestDto,
+            @Valid @RequestPart("userInfo") UserProfileRequest profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
         userService.signup(userDetails, profileRequestDto, profileImage);

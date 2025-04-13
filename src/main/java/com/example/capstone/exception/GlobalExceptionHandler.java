@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({UserNotFoundException.class, DuplicateNicknameException.class})
+    @ExceptionHandler({UserNotFoundException.class, DuplicateNicknameException.class, MatchingProfileNotFoundException.class})
     public ResponseEntity<ErrorDetails> handleUserException(RuntimeException ex, WebRequest request) {
         ErrorDetails errorDetails =
                 new ErrorDetails(ex.getMessage(),
