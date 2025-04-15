@@ -2,7 +2,8 @@ package com.example.capstone.service;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
 import com.example.capstone.dto.request.MatchingProfileRequest;
-import com.example.capstone.dto.response.MatchingProfileResponse;
+import com.example.capstone.dto.response.MatchingListProfileResponse;
+import com.example.capstone.dto.response.MatchingUserProfileResponse;
 import com.example.capstone.entity.MatchTravelStyle;
 import com.example.capstone.entity.MatchingProfile;
 import com.example.capstone.entity.UserEntity;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -76,14 +78,14 @@ public class MatchingService {
     }
 
     @Transactional(readOnly = true)
-    public MatchingProfileResponse getMatchingResultProfile(String nickname) {
+    public MatchingUserProfileResponse matchingUserProfile(String nickname) {
         UserEntity user = userRepository.findByNickname(nickname)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
         MatchingProfile matchingProfile = matchingProfileRepository.findByUser(user)
                 .orElseThrow(() -> new MatchingProfileNotFoundException("Matching profile not found"));
 
-        return MatchingProfileResponse.builder()
+        return MatchingUserProfileResponse.builder()
                 .nickname(user.getNickname())
                 .imageUrl(user.getProfileImageUrl())
                 .gender(user.getGender())
@@ -99,28 +101,32 @@ public class MatchingService {
                 .build();
     }
 
-    // 업데이트 로직 분리
-//    @Transactional
-//    public void updateMatchProfile(CustomOAuth2User userDetails, MatchingProfileRequest profileRequestDto) {
-//        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-//                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
-//
-//        MatchingProfile profile = matchingProfileRepository.findByUser(user)
-//                .orElseThrow(() -> new MatchingProfileNotFoundException("Matching profile not found"));
-//
-//        profile.updateProfile(
-//                profileRequestDto.getStartDate(),
-//                profileRequestDto.getEndDate(),
-//                profileRequestDto.getProvince(),
-//                profile.getCity(),
-//                profile.getGroupType(),
-//                profile.getAgeRange());
-//
-//        // 기존 여행 성향 초기화
-//        profile.getTravelStyles().clear();
-//
-//        updateTravelStyle(profileRequestDto, profile);
-//        matchingProfileRepository.save(profile);
+    @Transactional(readOnly = true)
+    public List<MatchingListProfileResponse> matchingResult(CustomOAuth2User userDetails) {
+        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
+                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
-//    }
+        MatchingProfile profile = matchingProfileRepository.findByUser(user)
+                .orElseThrow(() -> new MatchingProfileNotFoundException("Matching profile not found"));
+
+        // 사용자 매칭정보와 유사한 매칭정보 조회
+        List<MatchingProfile> matchingProfiles = matchingProfileRepository.matchingProfile(profile);
+
+        return matchingProfiles.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private MatchingListProfileResponse convertToResponse(MatchingProfile profile) {
+        // 매칭 프로필을 DTO로 변환하는 로직 (페치조인 사용해 최적화)
+        return new MatchingListProfileResponse(
+                profile.getUser().getNickname(),
+                profile.getUser().getProfileImageUrl(),
+                profile.getStartDate(),
+                profile.getEndDate(),
+                profile.getTravelStyles().stream()
+                        .map(MatchTravelStyle::getTravelStyle)
+                        .collect(Collectors.toList())
+        );
+    }
 }

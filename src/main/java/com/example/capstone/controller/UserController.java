@@ -23,8 +23,7 @@ public class UserController {
             description = "회원 수정시 화면에 출력할 회원정보 조회")
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getUserProfile(
-            @AuthenticationPrincipal CustomOAuth2User user
-    ) {
+            @AuthenticationPrincipal CustomOAuth2User user) {
         UserProfileResponse findUser = userService.findUser(user);
         return ResponseEntity.ok(findUser);
     }
@@ -36,7 +35,6 @@ public class UserController {
             @AuthenticationPrincipal CustomOAuth2User userDetails, // JWT에서 추출되 임시로 세션에 저장된 사용자 정보
             @Valid @RequestPart("userInfo") UserProfileRequest profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
-
         userService.updateProfile(userDetails, profileRequestDto, profileImage);
         return ResponseEntity.ok("회원정보 수정 성공");
     }

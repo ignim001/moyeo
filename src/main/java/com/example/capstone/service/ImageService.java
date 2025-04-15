@@ -1,5 +1,6 @@
 package com.example.capstone.service;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ImageService {
 
-    private final S3Config s3Config;
+    private final AmazonS3Client amazonS3Client;
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
@@ -32,16 +33,16 @@ public class ImageService {
         metadata.setContentType(file.getContentType());
 
         try (InputStream inputStream = file.getInputStream()) {
-            s3Config.amazonS3Client().putObject(new PutObjectRequest(bucketName, fileName, inputStream, metadata));
+            amazonS3Client.putObject(new PutObjectRequest(bucketName, fileName, inputStream, metadata));
         } catch (IOException e) {
             throw new RuntimeException("파일 업로드 실패", e);
         }
 
-        return s3Config.amazonS3Client().getUrl(bucketName, fileName).toString();
+        return amazonS3Client.getUrl(bucketName, fileName).toString();
     }
 
     public void deleteImage(String imageUrl) {
         String fileKey = imageUrl.substring(imageUrl.indexOf(".com/") + 5);
-        s3Config.amazonS3Client().deleteObject(new DeleteObjectRequest(bucketName, fileKey));
+        amazonS3Client.deleteObject(new DeleteObjectRequest(bucketName, fileKey));
     }
 }

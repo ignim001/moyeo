@@ -52,6 +52,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         // 신규 회원이면 임시 JWT 발급 (추가 정보 입력 유도)
         String tempToken = jwtUtil.generateToken(providerId, oAuth2Response.getEmail());
+        System.out.println("tempToken = " + tempToken);
         throw new OAuth2Exception("Additional information required", tempToken);
     }
 }
