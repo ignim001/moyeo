@@ -72,7 +72,6 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
         if (travelStyles == null || travelStyles.isEmpty()){
             return null;
         }
-
         return matchTravelStyle.travelStyle.in(travelStyles.stream()
                 .map(MatchTravelStyle::getTravelStyle)
                 .collect(Collectors.toList()));

@@ -36,7 +36,7 @@ public class MatchingService {
         if (optionalProfile.isPresent()) {
             MatchingProfile profile = optionalProfile.get();
 
-            // 기존 프로필 업데이트
+            // 기존 매칭정보 업데이트
             profile.updateProfile(
                     profileRequestDto.getStartDate(),
                     profileRequestDto.getEndDate(),
@@ -52,7 +52,7 @@ public class MatchingService {
             return;
         }
 
-        // 새 프로필 생성
+        // 새 매칭정보 생성
         MatchingProfile newProfile = MatchingProfile.builder()
                 .user(user)
                 .startDate(profileRequestDto.getStartDate())
@@ -108,7 +108,7 @@ public class MatchingService {
 
         MatchingProfile profile = matchingProfileRepository.findByUser(user)
                 .orElseThrow(() -> new MatchingProfileNotFoundException("Matching profile not found"));
-
+        
         // 사용자 매칭정보와 유사한 매칭정보 조회
         List<MatchingProfile> matchingProfiles = matchingProfileRepository.matchingProfile(profile);
 
