@@ -8,7 +8,7 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Getter
+@Data
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

@@ -1,22 +1,19 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/moyeo # 테스트용 h2 DB 연결
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:mysql://{RDS-ENDPOINT}:3306/{DB_NAME}?serverTimezone=Asia/Seoul&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: none  # 또는 create, none
-    show-sql: true  # SQL 로그 출력
-  h2:
-    console:
-      enabled: true  # H2 웹 콘솔 활성화
-      path: /h2-console  # 웹 콘솔 접속 경로
-  profiles:
-    include: oauth
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
 
-# OAuth2 변수설정
+  # OAuth2 변수설정
   security:
     oauth2:
       client:
@@ -26,7 +23,7 @@ spring:
             client-secret:
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+            redirect-uri: "${BASE_URL}/login/oauth2/code/kakao"
             scope:
               - profile_nickname
               - account_email
@@ -36,7 +33,7 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+            redirect-uri: "${BASE_URL}/login/oauth2/code/google"
             scope:
               - profile
               - email

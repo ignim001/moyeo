@@ -2,10 +2,10 @@ package com.example.capstone.dto.oauth2;
 
 import lombok.*;
 
-@Getter
+@Data
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OAuth2DTO {
 
     private String providerId;

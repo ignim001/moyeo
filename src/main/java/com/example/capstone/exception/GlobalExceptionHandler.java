@@ -8,7 +8,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.util.Map;
 
-//@RestControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(OAuth2Exception.class)
