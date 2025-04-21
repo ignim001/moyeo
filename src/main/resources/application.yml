@@ -1,13 +1,13 @@
 spring:
   datasource:
-    url: jdbc:mysql://${RDS_ENDPOINT}:3306/${DB_NAME}?serverTimezone=Asia/Seoul&useSSL=false
+    url: jdbc:mysql://{RDS-ENDPOINT}:3306/{DB_NAME}?serverTimezone=Asia/Seoul&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${RDS_USERNAME}
     password: ${RDS_PASSWORD}
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:

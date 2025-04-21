@@ -37,8 +37,10 @@ public class UserService {
         if (profileImage != null || !profileImage.isEmpty()) {
             // S3 이미지 저장후 URL 저장
             imageUrl = imageService.imageUpload(profileImage);
+            log.info("Profile image uploaded");
         } else {
             imageUrl = DEFAULT_PROFILE_IMAGE_URL;
+            log.info("Default profile image uploaded");
         }
 
         UserEntity user = UserEntity.builder()
