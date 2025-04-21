@@ -28,8 +28,8 @@ public class CustomSuccessfulHandler extends SimpleUrlAuthenticationSuccessHandl
 
         String token = jwtUtil.generateToken(providerId, email);
         // JWT 토큰을 응답 헤더에 추가
-        response.addHeader("Authorization", "Bearer " + token);
-        // 리다이렉트
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/success"); // 리다이렉트 URL 수정
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"token\": \"" + token + "\"}");
     }
 }
