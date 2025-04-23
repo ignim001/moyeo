@@ -58,7 +58,7 @@ public class JWTUtil {
                     .parseClaimsJws(authToken);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
-            System.err.println("Invalid JWT signature");
+            System.err.println("Invalid or missing token");
         } catch (ExpiredJwtException e) {
             System.err.println("JWT token is expired");
         } catch (UnsupportedJwtException e) {

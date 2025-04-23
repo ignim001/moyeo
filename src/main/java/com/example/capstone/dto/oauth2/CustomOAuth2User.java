@@ -36,4 +36,6 @@ public class CustomOAuth2User implements OAuth2User {
     public String getEmail() {
         return oAuth2DTO.getEmail();
     }
+
+    public String getTempToken() {return oAuth2DTO.getTempToken();}
 }

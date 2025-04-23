@@ -1,5 +1,6 @@
 package com.example.capstone.dto.response;
 
+import com.example.capstone.entity.CITY;
 import com.example.capstone.entity.Gender;
 import com.example.capstone.entity.MBTI;
 import com.example.capstone.entity.TravelStyle;
@@ -22,7 +23,7 @@ public class MatchingUserProfileResponse {
     private LocalDate endDate;
     // 목적지
     private String province;
-    private String city;
+    private List<CITY> cities;
     private List<TravelStyle> travelStyles;
     private MBTI mbti;
 

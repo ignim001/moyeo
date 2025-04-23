@@ -20,7 +20,7 @@ public class UserEntity {
     @Column(nullable = false)
     private String providerId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(unique = true, nullable = false)

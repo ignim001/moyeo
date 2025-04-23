@@ -1,5 +1,6 @@
 package com.example.capstone.dto.request;
 
+import com.example.capstone.entity.CITY;
 import com.example.capstone.entity.TravelStyle;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -20,7 +21,7 @@ public class MatchingProfileRequest {
     // 도 단위 지역
     private String province;
     // 시 단위 지역
-    private String city;
+    private List<CITY> cities;
     private String groupType;
     private String ageRange;
     private List<TravelStyle> travelStyles;

@@ -4,6 +4,7 @@ import com.example.capstone.dto.oauth2.CustomOAuth2User;
 import com.example.capstone.dto.request.MatchingProfileRequest;
 import com.example.capstone.dto.response.MatchingListProfileResponse;
 import com.example.capstone.dto.response.MatchingUserProfileResponse;
+import com.example.capstone.entity.MatchCity;
 import com.example.capstone.entity.MatchTravelStyle;
 import com.example.capstone.entity.MatchingProfile;
 import com.example.capstone.entity.UserEntity;
@@ -26,6 +27,7 @@ public class MatchingService {
     private final UserRepository userRepository;
     private final MatchingProfileRepository matchingProfileRepository;
 
+    // 매칭 정보 생성, 수정
     @Transactional
     public void createMatchProfile(CustomOAuth2User userDetails, MatchingProfileRequest profileRequestDto) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
@@ -41,14 +43,15 @@ public class MatchingService {
                     profileRequestDto.getStartDate(),
                     profileRequestDto.getEndDate(),
                     profileRequestDto.getProvince(),
-                    profileRequestDto.getCity(),
                     profileRequestDto.getGroupType(),
                     profileRequestDto.getAgeRange()
             );
 
             // 기존 여행 성향 초기화 후 새로 추가
             profile.getTravelStyles().clear();
+            profile.getMatchCities().clear();
             updateTravelStyle(profileRequestDto, profile);
+            updateCity(profileRequestDto, profile);
             return;
         }
 
@@ -58,12 +61,12 @@ public class MatchingService {
                 .startDate(profileRequestDto.getStartDate())
                 .endDate(profileRequestDto.getEndDate())
                 .province(profileRequestDto.getProvince())
-                .city(profileRequestDto.getCity())
                 .groupType(profileRequestDto.getGroupType())
                 .ageRange(profileRequestDto.getAgeRange())
                 .build();
 
         updateTravelStyle(profileRequestDto, newProfile);
+        updateCity(profileRequestDto, newProfile);
         matchingProfileRepository.save(newProfile);
     }
 
@@ -77,6 +80,17 @@ public class MatchingService {
         }
     }
 
+    private void updateCity(MatchingProfileRequest profileRequestDto, MatchingProfile profile) {
+        if (profileRequestDto.getTravelStyles() != null) {
+            profile.getMatchCities().addAll(
+                    profileRequestDto.getCities().stream()
+                            .map(city -> new MatchCity(profile, city))
+                            .collect(Collectors.toList())
+            );
+        }
+    }
+
+    // 매칭된 사용자 상세 정보 조회
     @Transactional(readOnly = true)
     public MatchingUserProfileResponse matchingUserProfile(String nickname) {
         UserEntity user = userRepository.findByNickname(nickname)
@@ -93,14 +107,17 @@ public class MatchingService {
                 .startDate(matchingProfile.getStartDate())
                 .endDate(matchingProfile.getEndDate())
                 .province(matchingProfile.getProvince())
-                .city(matchingProfile.getCity())
                 // Enum 타입 변환
+                .cities(matchingProfile.getMatchCities().stream()
+                        .map(MatchCity::getCity)
+                        .collect(Collectors.toList()))
                 .travelStyles(matchingProfile.getTravelStyles().stream()
                         .map(MatchTravelStyle::getTravelStyle)
                         .collect(Collectors.toList()))
                 .build();
     }
 
+    // 필터링된 사용자 조회
     @Transactional(readOnly = true)
     public List<MatchingListProfileResponse> matchingResult(CustomOAuth2User userDetails) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())

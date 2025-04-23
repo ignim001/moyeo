@@ -26,6 +26,11 @@ public class MatchingProfile {
     @OneToMany(mappedBy = "matchingProfile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MatchTravelStyle> travelStyles = new ArrayList<>();
 
+    // 시 단위 지역
+    @Builder.Default
+    @OneToMany(mappedBy = "matchingProfile", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MatchCity>  matchCities = new ArrayList<>();
+
     @Column(nullable = false)
     private LocalDate startDate;
 
@@ -34,18 +39,15 @@ public class MatchingProfile {
 
     // 도 단위 지역
     private String province;
-    // 시 단위 지역
-    private String city;
 
     private String groupType;
 
     private String ageRange;
 
-    public void updateProfile(LocalDate startDate, LocalDate endDate, String province, String city, String groupType, String ageRange) {
+    public void updateProfile(LocalDate startDate, LocalDate endDate, String province, String groupType, String ageRange) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.province = province;
-        this.city = city;
         this.groupType = groupType;
         this.ageRange = ageRange;
     }

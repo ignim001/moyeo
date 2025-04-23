@@ -7,6 +7,7 @@ import com.example.capstone.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +23,10 @@ public class UserController {
     @Operation(summary = "회원조회 API",
             description = "회원 수정시 화면에 출력할 회원정보 조회")
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getUserProfile(
+    public ResponseEntity<?> getUserProfile(
             @AuthenticationPrincipal CustomOAuth2User user) {
         UserProfileResponse findUser = userService.findUser(user);
-        return ResponseEntity.ok(findUser);
+        return new ResponseEntity<>(findUser, HttpStatus.OK);
     }
 
     @Operation(summary = "회원수정 API",
@@ -36,6 +37,7 @@ public class UserController {
             @Valid @RequestPart("userInfo") UserProfileRequest profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         userService.updateProfile(userDetails, profileRequestDto, profileImage);
-        return ResponseEntity.ok("회원정보 수정 성공");
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

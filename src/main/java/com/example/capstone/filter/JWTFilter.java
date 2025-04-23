@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +34,7 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         String token = parseJwt(request);
+        log.info("Method: {}, URI: {}, Token: {}", request.getMethod(), request.getRequestURI(), token);
         if (token == null || !jwtUtil.validateJwt(token)) {
             filterChain.doFilter(request, response);
             return;
@@ -62,7 +64,6 @@ public class JWTFilter extends OncePerRequestFilter {
         if (authorization != null && authorization.startsWith("Bearer ")) {
             return authorization.substring(7);
         }
-
         return null;
     }
 

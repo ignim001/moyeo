@@ -27,9 +27,19 @@ public class CustomSuccessfulHandler extends SimpleUrlAuthenticationSuccessHandl
         String email = oAuth2User.getEmail();
 
         String token = jwtUtil.generateToken(providerId, email);
-        // JWT 토큰을 응답 헤더에 추가
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"token\": \"" + token + "\"}");
+
+        // 세션에서 redirect_uri 가져오기
+        String redirectUri = (String) request.getSession().getAttribute("redirect_uri");
+        if (redirectUri == null) {
+            redirectUri = "exp://default-url"; // fallback 주소
+        }
+
+        // 신규, 기존 사용자 구분해 redirect
+        if (oAuth2User.getTempToken() != null) {
+            response.sendRedirect(redirectUri + "?mode=register&token=" + oAuth2User.getTempToken());
+        } else {
+            String jwtToken = jwtUtil.generateToken(oAuth2User.getProviderId(), oAuth2User.getEmail());
+            response.sendRedirect(redirectUri + "?mode=login&token=" + jwtToken);
+        }
     }
 }

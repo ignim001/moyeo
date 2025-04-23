@@ -26,7 +26,7 @@ public class UserService {
     private String DEFAULT_PROFILE_IMAGE_URL;
 
     @Transactional
-    public void signup(CustomOAuth2User userDetails, UserProfileRequest dto, MultipartFile profileImage) {
+    public UserEntity signup(CustomOAuth2User userDetails, UserProfileRequest dto, MultipartFile profileImage) {
         // 닉네임 중복 처리
         if (userRepository.existsByNickname(dto.getNickname())) {
             throw new DuplicateNicknameException("Nickname already exists");
@@ -37,10 +37,8 @@ public class UserService {
         if (profileImage != null || !profileImage.isEmpty()) {
             // S3 이미지 저장후 URL 저장
             imageUrl = imageService.imageUpload(profileImage);
-            log.info("Profile image uploaded");
         } else {
             imageUrl = DEFAULT_PROFILE_IMAGE_URL;
-            log.info("Default profile image uploaded");
         }
 
         UserEntity user = UserEntity.builder()
@@ -54,6 +52,7 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+        return user;
     }
 
     @Transactional(readOnly = true)

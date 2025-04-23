@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.example.capstone.entity.QMatchCity.*;
 import static com.example.capstone.entity.QMatchTravelStyle.*;
 import static com.example.capstone.entity.QMatchingProfile.*;
 import static com.example.capstone.entity.QUserEntity.*;
@@ -31,11 +32,12 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
                 .from(matchingProfile)
                 .join(matchingProfile.user, userEntity).fetchJoin()
                 .leftJoin(matchingProfile.travelStyles, matchTravelStyle).fetchJoin()
+                .leftJoin(matchingProfile.matchCities, matchCity)
                 .where(
                         notSelf(profile.getId()),
                         dateBetween(profile.getStartDate(), profile.getEndDate()),
                         provinceEq(profile.getProvince()),
-                        cityEq(profile.getCity()),
+                        cityEq(profile.getMatchCities()),
                         groupTypeEq(profile.getGroupType()),
                         ageRangeEq(profile.getAgeRange()),
                         travelStyleEq(profile.getTravelStyles())
@@ -56,10 +58,6 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
         return hasText(province) ? matchingProfile.province.eq(province) : null;
     }
 
-    private BooleanExpression cityEq(String city) {
-        return hasText(city) ? matchingProfile.city.eq(city) : null;
-    }
-
     private BooleanExpression groupTypeEq(String groupType) {
         return hasText(groupType) ? matchingProfile.groupType.eq(groupType) : null;
     }
@@ -74,6 +72,15 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
         }
         return matchTravelStyle.travelStyle.in(travelStyles.stream()
                 .map(MatchTravelStyle::getTravelStyle)
+                .collect(Collectors.toList()));
+    }
+
+    private BooleanExpression cityEq(List<MatchCity> cites) {
+        if (cites == null || cites.isEmpty()){
+            return null;
+        }
+        return matchCity.city.in(cites.stream()
+                .map(MatchCity::getCity)
                 .collect(Collectors.toList()));
     }
 }
