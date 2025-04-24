@@ -117,7 +117,7 @@ public class MatchingService {
                 .build();
     }
 
-    // 필터링된 사용자 조회
+    // 매칭된 사용자 목록 조회
     @Transactional(readOnly = true)
     public List<MatchingListProfileResponse> matchingResult(CustomOAuth2User userDetails) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())

@@ -42,9 +42,9 @@ public class MatchingProfile {
 
     private String groupType;
 
-    private String ageRange;
+    private int ageRange;
 
-    public void updateProfile(LocalDate startDate, LocalDate endDate, String province, String groupType, String ageRange) {
+    public void updateProfile(LocalDate startDate, LocalDate endDate, String province, String groupType, int ageRange) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.province = province;

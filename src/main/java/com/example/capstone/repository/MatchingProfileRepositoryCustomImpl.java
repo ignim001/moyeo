@@ -62,8 +62,27 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
         return hasText(groupType) ? matchingProfile.groupType.eq(groupType) : null;
     }
 
-    private BooleanExpression ageRangeEq(String ageRange) {
-        return hasText(ageRange) ? matchingProfile.ageRange.eq(ageRange) : null;
+    private BooleanExpression ageRangeEq(Integer ageRange) {
+        if (ageRange == null) {
+            return null;
+        }
+
+        switch (ageRange) {
+            case 10:
+                return userEntity.age.between(10, 19);
+            case 20:
+                return userEntity.age.between(20, 29);
+            case 30:
+                return userEntity.age.between(30, 39);
+            case 40:
+                return userEntity.age.between(40, 49);
+            case 50:
+                return userEntity.age.between(50, 59);
+            case 60:
+                return userEntity.age.between(60, 69);
+            default:
+                return null;
+        }
     }
 
     private BooleanExpression travelStyleEq(List<MatchTravelStyle> travelStyles) {

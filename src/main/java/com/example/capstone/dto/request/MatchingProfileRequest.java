@@ -23,6 +23,6 @@ public class MatchingProfileRequest {
     // 시 단위 지역
     private List<CITY> cities;
     private String groupType;
-    private String ageRange;
+    private int ageRange;
     private List<TravelStyle> travelStyles;
 }
