@@ -1,8 +1,8 @@
 package com.example.capstone.controller;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileRequest;
-import com.example.capstone.dto.response.UserProfileResponse;
+import com.example.capstone.dto.request.UserProfileReqDto;
+import com.example.capstone.dto.response.UserProfileResDto;
 import com.example.capstone.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -25,7 +25,7 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(
             @AuthenticationPrincipal CustomOAuth2User user) {
-        UserProfileResponse findUser = userService.findUser(user);
+        UserProfileResDto findUser = userService.findUser(user);
         return new ResponseEntity<>(findUser, HttpStatus.OK);
     }
 
@@ -34,7 +34,7 @@ public class UserController {
     @PutMapping("/edit")
     public ResponseEntity<?> editUser(
             @AuthenticationPrincipal CustomOAuth2User userDetails, // JWT에서 추출되 임시로 세션에 저장된 사용자 정보
-            @Valid @RequestPart("userInfo") UserProfileRequest profileRequestDto,
+            @Valid @RequestPart("userInfo") UserProfileReqDto profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         userService.updateProfile(userDetails, profileRequestDto, profileImage);
 

@@ -1,10 +1,10 @@
 package com.example.capstone.controller;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileRequest;
+import com.example.capstone.dto.request.UserProfileReqDto;
 import com.example.capstone.entity.UserEntity;
 import com.example.capstone.service.UserService;
-import com.example.capstone.util.JWTUtil;
+import com.example.capstone.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +26,14 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
-    private final JWTUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
     @Operation(summary = "회원가입 API",
             description = "닉네임, 나이, 성별, MBTI, 이미지 입력")
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> signup(
             @AuthenticationPrincipal CustomOAuth2User userDetails, // JWT에서 추출되 임시로 세션에 저장된 사용자 정보
-            @Valid @RequestPart("userInfo") UserProfileRequest profileRequestDto,
+            @Valid @RequestPart("userInfo") UserProfileReqDto profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         UserEntity user = userService.signup(userDetails, profileRequestDto, profileImage);
 

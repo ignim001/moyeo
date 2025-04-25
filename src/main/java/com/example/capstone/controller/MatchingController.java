@@ -1,9 +1,9 @@
 package com.example.capstone.controller;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.MatchingProfileRequest;
-import com.example.capstone.dto.response.MatchingListProfileResponse;
-import com.example.capstone.dto.response.MatchingUserProfileResponse;
+import com.example.capstone.dto.request.MatchingProfileReqDto;
+import com.example.capstone.dto.response.MatchingListProfileResDto;
+import com.example.capstone.dto.response.MatchingUserProfileResDto;
 import com.example.capstone.service.MatchingService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ public class MatchingController {
     @PostMapping("/profile")
     public ResponseEntity<?> saveMatchingProfile (
             @AuthenticationPrincipal CustomOAuth2User userDetails,
-            @Valid @RequestBody MatchingProfileRequest profileRequestDto) {
+            @Valid @RequestBody MatchingProfileReqDto profileRequestDto) {
         matchingService.createMatchProfile(userDetails, profileRequestDto);
         return ResponseEntity.ok("매칭정보 생성 성공");
     }
@@ -36,7 +36,7 @@ public class MatchingController {
             description = "결과 리스트에서 선택한 사용자 정보 조회")
     @GetMapping("/profile")
     public ResponseEntity<?> getMatchingProfile(@RequestParam String nickname) {
-        MatchingUserProfileResponse matchingResultProfile = matchingService.matchingUserProfile(nickname);
+        MatchingUserProfileResDto matchingResultProfile = matchingService.matchingUserProfile(nickname);
         return new ResponseEntity<>(matchingResultProfile, HttpStatus.OK);
     }
 
@@ -45,7 +45,7 @@ public class MatchingController {
     @GetMapping("/result")
     public ResponseEntity<?> getMatchingResult(
             @AuthenticationPrincipal CustomOAuth2User userDetails){
-        List<MatchingListProfileResponse> matchingResults = matchingService.matchingResult(userDetails);
+        List<MatchingListProfileResDto> matchingResults = matchingService.matchingResult(userDetails);
         return new ResponseEntity<>(matchingResults, HttpStatus.OK);
     }
 }

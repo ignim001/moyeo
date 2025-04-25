@@ -9,7 +9,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class UserProfileRequest {
+public class UserProfileReqDto {
 
     @NotBlank
     private String nickname;

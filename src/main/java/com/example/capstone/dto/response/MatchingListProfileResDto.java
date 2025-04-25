@@ -10,7 +10,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class MatchingListProfileResponse {
+public class MatchingListProfileResDto {
 
     private String nickname;
     private String imageUrl;

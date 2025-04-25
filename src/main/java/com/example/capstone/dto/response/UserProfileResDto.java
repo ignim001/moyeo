@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class UserProfileResponse {
+public class UserProfileResDto {
 
     private String nickname;
     private Gender gender;

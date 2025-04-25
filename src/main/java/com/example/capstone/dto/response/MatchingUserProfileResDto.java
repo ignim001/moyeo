@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class MatchingUserProfileResponse {
+public class MatchingUserProfileResDto {
 
     private String nickname;
     private String imageUrl;

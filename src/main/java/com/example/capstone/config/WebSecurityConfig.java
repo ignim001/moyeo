@@ -3,7 +3,7 @@ package com.example.capstone.config;
 import com.example.capstone.filter.JWTFilter;
 import com.example.capstone.handler.CustomSuccessfulHandler;
 import com.example.capstone.service.CustomOAuth2UserService;
-import com.example.capstone.util.JWTUtil;
+import com.example.capstone.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +27,7 @@ public class WebSecurityConfig {
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final CustomSuccessfulHandler customSuccessfulHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final JWTUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

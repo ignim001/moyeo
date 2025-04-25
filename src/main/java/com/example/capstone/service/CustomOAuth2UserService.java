@@ -3,10 +3,8 @@ package com.example.capstone.service;
 import com.example.capstone.dto.oauth2.*;
 import com.example.capstone.entity.UserEntity;
 import com.example.capstone.repository.UserRepository;
-import com.example.capstone.util.JWTUtil;
+import com.example.capstone.util.JwtUtil;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -14,10 +12,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import java.io.IOException;
 
 @Service
 @Slf4j
@@ -25,7 +19,7 @@ import java.io.IOException;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
-    private final JWTUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {

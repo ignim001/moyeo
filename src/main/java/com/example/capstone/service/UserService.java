@@ -1,8 +1,8 @@
 package com.example.capstone.service;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileRequest;
-import com.example.capstone.dto.response.UserProfileResponse;
+import com.example.capstone.dto.request.UserProfileReqDto;
+import com.example.capstone.dto.response.UserProfileResDto;
 import com.example.capstone.entity.UserEntity;
 import com.example.capstone.exception.DuplicateNicknameException;
 import com.example.capstone.exception.UserNotFoundException;
@@ -26,7 +26,7 @@ public class UserService {
     private String DEFAULT_PROFILE_IMAGE_URL;
 
     @Transactional
-    public UserEntity signup(CustomOAuth2User userDetails, UserProfileRequest dto, MultipartFile profileImage) {
+    public UserEntity signup(CustomOAuth2User userDetails, UserProfileReqDto dto, MultipartFile profileImage) {
         // 닉네임 중복 처리
         if (userRepository.existsByNickname(dto.getNickname())) {
             throw new DuplicateNicknameException("Nickname already exists");
@@ -56,11 +56,11 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserProfileResponse findUser(CustomOAuth2User customOAuth2User){
+    public UserProfileResDto findUser(CustomOAuth2User customOAuth2User){
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
-        return UserProfileResponse.builder()
+        return UserProfileResDto.builder()
                 .nickname(user.getNickname())
                 .age(user.getAge())
                 .gender(user.getGender())
@@ -70,7 +70,7 @@ public class UserService {
     }
 
     @Transactional
-    public void updateProfile(CustomOAuth2User customOAuth2User, UserProfileRequest dto, MultipartFile profileImage){
+    public void updateProfile(CustomOAuth2User customOAuth2User, UserProfileReqDto dto, MultipartFile profileImage){
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 

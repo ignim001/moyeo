@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class MatchingProfileRequest {
+public class MatchingProfileReqDto {
 
     @NotBlank
     private LocalDate startDate;

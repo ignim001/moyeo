@@ -1,9 +1,9 @@
 package com.example.capstone.service;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.MatchingProfileRequest;
-import com.example.capstone.dto.response.MatchingListProfileResponse;
-import com.example.capstone.dto.response.MatchingUserProfileResponse;
+import com.example.capstone.dto.request.MatchingProfileReqDto;
+import com.example.capstone.dto.response.MatchingListProfileResDto;
+import com.example.capstone.dto.response.MatchingUserProfileResDto;
 import com.example.capstone.entity.MatchCity;
 import com.example.capstone.entity.MatchTravelStyle;
 import com.example.capstone.entity.MatchingProfile;
@@ -29,7 +29,7 @@ public class MatchingService {
 
     // 매칭 정보 생성, 수정
     @Transactional
-    public void createMatchProfile(CustomOAuth2User userDetails, MatchingProfileRequest profileRequestDto) {
+    public void createMatchProfile(CustomOAuth2User userDetails, MatchingProfileReqDto profileRequestDto) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
@@ -70,7 +70,7 @@ public class MatchingService {
         matchingProfileRepository.save(newProfile);
     }
 
-    private void updateTravelStyle(MatchingProfileRequest profileRequestDto, MatchingProfile profile) {
+    private void updateTravelStyle(MatchingProfileReqDto profileRequestDto, MatchingProfile profile) {
         if (profileRequestDto.getTravelStyles() != null) {
             profile.getTravelStyles().addAll(
                     profileRequestDto.getTravelStyles().stream()
@@ -80,7 +80,7 @@ public class MatchingService {
         }
     }
 
-    private void updateCity(MatchingProfileRequest profileRequestDto, MatchingProfile profile) {
+    private void updateCity(MatchingProfileReqDto profileRequestDto, MatchingProfile profile) {
         if (profileRequestDto.getTravelStyles() != null) {
             profile.getMatchCities().addAll(
                     profileRequestDto.getCities().stream()
@@ -92,14 +92,14 @@ public class MatchingService {
 
     // 매칭된 사용자 상세 정보 조회
     @Transactional(readOnly = true)
-    public MatchingUserProfileResponse matchingUserProfile(String nickname) {
+    public MatchingUserProfileResDto matchingUserProfile(String nickname) {
         UserEntity user = userRepository.findByNickname(nickname)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
         MatchingProfile matchingProfile = matchingProfileRepository.findByUser(user)
                 .orElseThrow(() -> new MatchingProfileNotFoundException("Matching profile not found"));
 
-        return MatchingUserProfileResponse.builder()
+        return MatchingUserProfileResDto.builder()
                 .nickname(user.getNickname())
                 .imageUrl(user.getProfileImageUrl())
                 .gender(user.getGender())
@@ -119,7 +119,7 @@ public class MatchingService {
 
     // 매칭된 사용자 목록 조회
     @Transactional(readOnly = true)
-    public List<MatchingListProfileResponse> matchingResult(CustomOAuth2User userDetails) {
+    public List<MatchingListProfileResDto> matchingResult(CustomOAuth2User userDetails) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
@@ -134,9 +134,9 @@ public class MatchingService {
                 .collect(Collectors.toList());
     }
 
-    private MatchingListProfileResponse convertToResponse(MatchingProfile profile) {
+    private MatchingListProfileResDto convertToResponse(MatchingProfile profile) {
         // 매칭 프로필을 DTO로 변환하는 로직 (페치조인 사용해 최적화)
-        return new MatchingListProfileResponse(
+        return new MatchingListProfileResDto(
                 profile.getUser().getNickname(),
                 profile.getUser().getProfileImageUrl(),
                 profile.getStartDate(),
