@@ -1,8 +1,8 @@
 package com.example.capstone.service;
 
 import com.example.capstone.dto.oauth2.*;
-import com.example.capstone.entity.UserEntity;
-import com.example.capstone.repository.UserRepository;
+import com.example.capstone.user.domain.UserEntity;
+import com.example.capstone.user.repository.UserRepository;
 import com.example.capstone.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;

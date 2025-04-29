@@ -1,9 +1,9 @@
 package com.example.capstone.service;
 
 import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileReqDto;
-import com.example.capstone.dto.response.UserProfileResDto;
-import com.example.capstone.entity.UserEntity;
+import com.example.capstone.user.dto.UserProfileReqDto;
+import com.example.capstone.user.dto.UserProfileResDto;
+import com.example.capstone.user.domain.UserEntity;
 import com.example.capstone.exception.DuplicateNicknameException;
 import com.example.capstone.exception.UserNotFoundException;
 import com.example.capstone.repository.UserRepository;

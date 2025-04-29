@@ -1,5 +1,6 @@
-package com.example.capstone.entity;
+package com.example.capstone.user.domain;
 
+import com.example.capstone.entity.MatchingProfile;
 import jakarta.persistence.*;
 import lombok.*;
 

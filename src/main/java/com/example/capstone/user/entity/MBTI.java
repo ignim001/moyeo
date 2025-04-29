@@ -1,4 +1,4 @@
-package com.example.capstone.entity;
+package com.example.capstone.user.domain;
 
 public enum MBTI {
     ISTJ, ISFJ, INFJ, INTJ,

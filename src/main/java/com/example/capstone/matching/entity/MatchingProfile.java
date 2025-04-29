@@ -1,5 +1,6 @@
 package com.example.capstone.entity;
 
+import com.example.capstone.user.domain.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,8 +1,8 @@
 package com.example.capstone.dto.response;
 
 import com.example.capstone.entity.CITY;
-import com.example.capstone.entity.Gender;
-import com.example.capstone.entity.MBTI;
+import com.example.capstone.user.domain.Gender;
+import com.example.capstone.user.domain.MBTI;
 import com.example.capstone.entity.TravelStyle;
 import lombok.*;
 
