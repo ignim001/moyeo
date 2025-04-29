@@ -1,9 +1,9 @@
 package com.example.capstone.config;
 
-import com.example.capstone.filter.JWTFilter;
-import com.example.capstone.handler.CustomSuccessfulHandler;
-import com.example.capstone.service.CustomOAuth2UserService;
-import com.example.capstone.util.JwtUtil;
+import com.example.capstone.util.jwt.filter.JWTFilter;
+import com.example.capstone.util.jwt.handler.CustomSuccessfulHandler;
+import com.example.capstone.util.oauth2.CustomOAuth2UserService;
+import com.example.capstone.util.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

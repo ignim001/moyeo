@@ -1,6 +1,6 @@
-package com.example.capstone.dto.response;
+package com.example.capstone.matching.dto;
 
-import com.example.capstone.entity.TravelStyle;
+import com.example.capstone.matching.entity.TravelStyle;
 import lombok.*;
 
 import java.time.LocalDate;

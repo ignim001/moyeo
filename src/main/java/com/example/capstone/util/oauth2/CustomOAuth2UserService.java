@@ -1,10 +1,10 @@
-package com.example.capstone.service;
+package com.example.capstone.util.oauth2;
 
-import com.example.capstone.dto.oauth2.*;
-import com.example.capstone.user.domain.UserEntity;
+import com.example.capstone.user.entity.UserEntity;
 import com.example.capstone.user.repository.UserRepository;
-import com.example.capstone.util.JwtUtil;
+import com.example.capstone.util.jwt.JwtUtil;
 
+import com.example.capstone.util.oauth2.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;

@@ -1,12 +1,13 @@
-package com.example.capstone.service;
+package com.example.capstone.user.service;
 
-import com.example.capstone.dto.oauth2.CustomOAuth2User;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
+import com.example.capstone.util.s3.ImageService;
 import com.example.capstone.user.dto.UserProfileReqDto;
 import com.example.capstone.user.dto.UserProfileResDto;
-import com.example.capstone.user.domain.UserEntity;
-import com.example.capstone.exception.DuplicateNicknameException;
-import com.example.capstone.exception.UserNotFoundException;
-import com.example.capstone.repository.UserRepository;
+import com.example.capstone.user.entity.UserEntity;
+import com.example.capstone.user.exception.DuplicateNicknameException;
+import com.example.capstone.user.exception.UserNotFoundException;
+import com.example.capstone.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

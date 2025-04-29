@@ -1,4 +1,4 @@
-package com.example.capstone.dto.oauth2;
+package com.example.capstone.util.oauth2.dto;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

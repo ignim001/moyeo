@@ -1,6 +1,8 @@
-package com.example.capstone.repository;
+package com.example.capstone.matching.repository;
 
-import com.example.capstone.entity.*;
+import com.example.capstone.matching.entity.MatchCity;
+import com.example.capstone.matching.entity.MatchTravelStyle;
+import com.example.capstone.matching.entity.MatchingProfile;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +12,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.example.capstone.entity.QMatchCity.*;
-import static com.example.capstone.entity.QMatchTravelStyle.*;
-import static com.example.capstone.entity.QMatchingProfile.*;
-import static com.example.capstone.entity.QUserEntity.*;
+import static com.example.capstone.matching.entity.QMatchCity.matchCity;
+import static com.example.capstone.matching.entity.QMatchTravelStyle.matchTravelStyle;
+import static com.example.capstone.matching.entity.QMatchingProfile.matchingProfile;
+import static com.example.capstone.user.entity.QUserEntity.userEntity;
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j

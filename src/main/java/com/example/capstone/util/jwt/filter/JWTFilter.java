@@ -1,8 +1,8 @@
-package com.example.capstone.filter;
+package com.example.capstone.util.jwt.filter;
 
-import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.oauth2.OAuth2DTO;
-import com.example.capstone.util.JwtUtil;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
+import com.example.capstone.util.oauth2.dto.OAuth2DTO;
+import com.example.capstone.util.jwt.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,10 +1,10 @@
-package com.example.capstone.controller;
+package com.example.capstone.matching.controller;
 
-import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.MatchingProfileReqDto;
-import com.example.capstone.dto.response.MatchingListProfileResDto;
-import com.example.capstone.dto.response.MatchingUserProfileResDto;
-import com.example.capstone.service.MatchingService;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
+import com.example.capstone.matching.dto.MatchingProfileReqDto;
+import com.example.capstone.matching.dto.MatchingListProfileResDto;
+import com.example.capstone.matching.dto.MatchingUserProfileResDto;
+import com.example.capstone.matching.service.MatchingService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

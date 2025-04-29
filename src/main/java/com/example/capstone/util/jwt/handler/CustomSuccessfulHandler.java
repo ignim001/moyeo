@@ -1,7 +1,7 @@
-package com.example.capstone.handler;
+package com.example.capstone.util.jwt.handler;
 
-import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.util.JwtUtil;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
+import com.example.capstone.util.jwt.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

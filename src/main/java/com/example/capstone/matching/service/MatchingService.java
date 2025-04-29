@@ -1,16 +1,16 @@
-package com.example.capstone.service;
+package com.example.capstone.matching.service;
 
-import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.MatchingProfileReqDto;
-import com.example.capstone.dto.response.MatchingListProfileResDto;
-import com.example.capstone.dto.response.MatchingUserProfileResDto;
-import com.example.capstone.entity.MatchCity;
-import com.example.capstone.entity.MatchTravelStyle;
-import com.example.capstone.entity.MatchingProfile;
-import com.example.capstone.user.domain.UserEntity;
-import com.example.capstone.exception.MatchingProfileNotFoundException;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
+import com.example.capstone.matching.dto.MatchingProfileReqDto;
+import com.example.capstone.matching.dto.MatchingListProfileResDto;
+import com.example.capstone.matching.dto.MatchingUserProfileResDto;
+import com.example.capstone.matching.entity.MatchCity;
+import com.example.capstone.matching.entity.MatchTravelStyle;
+import com.example.capstone.matching.entity.MatchingProfile;
+import com.example.capstone.user.entity.UserEntity;
+import com.example.capstone.matching.exception.MatchingProfileNotFoundException;
 import com.example.capstone.user.exception.UserNotFoundException;
-import com.example.capstone.repository.MatchingProfileRepository;
+import com.example.capstone.matching.repository.MatchingProfileRepository;
 import com.example.capstone.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

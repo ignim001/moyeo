@@ -1,4 +1,4 @@
-package com.example.capstone.entity;
+package com.example.capstone.matching.entity;
 
 public enum TravelStyle {
     ACTIVITY,

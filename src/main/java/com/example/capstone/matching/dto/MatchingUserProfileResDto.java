@@ -1,9 +1,9 @@
-package com.example.capstone.dto.response;
+package com.example.capstone.matching.dto;
 
-import com.example.capstone.entity.CITY;
-import com.example.capstone.user.domain.Gender;
-import com.example.capstone.user.domain.MBTI;
-import com.example.capstone.entity.TravelStyle;
+import com.example.capstone.matching.entity.CITY;
+import com.example.capstone.user.entity.Gender;
+import com.example.capstone.user.entity.MBTI;
+import com.example.capstone.matching.entity.TravelStyle;
 import lombok.*;
 
 import java.time.LocalDate;

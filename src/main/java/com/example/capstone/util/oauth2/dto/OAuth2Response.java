@@ -1,4 +1,4 @@
-package com.example.capstone.dto.oauth2;
+package com.example.capstone.util.oauth2.dto;
 
 public interface OAuth2Response {
 

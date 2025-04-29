@@ -1,6 +1,6 @@
-package com.example.capstone.repository;
+package com.example.capstone.matching.repository;
 
-import com.example.capstone.entity.MatchingProfile;
+import com.example.capstone.matching.entity.MatchingProfile;
 
 import java.util.List;
 

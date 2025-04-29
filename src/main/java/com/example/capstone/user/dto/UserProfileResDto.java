@@ -1,7 +1,7 @@
-package com.example.capstone.dto.response;
+package com.example.capstone.user.dto;
 
-import com.example.capstone.entity.Gender;
-import com.example.capstone.entity.MBTI;
+import com.example.capstone.user.entity.Gender;
+import com.example.capstone.user.entity.MBTI;
 import lombok.*;
 
 @Getter

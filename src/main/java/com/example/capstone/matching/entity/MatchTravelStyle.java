@@ -1,10 +1,9 @@
-package com.example.capstone.entity;
+package com.example.capstone.matching.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter

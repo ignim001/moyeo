@@ -1,4 +1,4 @@
-package com.example.capstone.util;
+package com.example.capstone.util.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.SignatureAlgorithm;

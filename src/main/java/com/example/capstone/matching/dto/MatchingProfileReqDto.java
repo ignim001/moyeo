@@ -1,7 +1,7 @@
-package com.example.capstone.dto.request;
+package com.example.capstone.matching.dto;
 
-import com.example.capstone.entity.CITY;
-import com.example.capstone.entity.TravelStyle;
+import com.example.capstone.matching.entity.CITY;
+import com.example.capstone.matching.entity.TravelStyle;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 

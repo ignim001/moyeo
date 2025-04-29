@@ -1,9 +1,9 @@
-package com.example.capstone.controller;
+package com.example.capstone.user.controller;
 
-import com.example.capstone.dto.oauth2.CustomOAuth2User;
-import com.example.capstone.dto.request.UserProfileReqDto;
-import com.example.capstone.dto.response.UserProfileResDto;
-import com.example.capstone.service.UserService;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
+import com.example.capstone.user.dto.UserProfileReqDto;
+import com.example.capstone.user.dto.UserProfileResDto;
+import com.example.capstone.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
