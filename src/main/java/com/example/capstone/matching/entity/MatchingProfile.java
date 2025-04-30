@@ -39,13 +39,15 @@ public class MatchingProfile {
     private LocalDate endDate;
 
     // 도 단위 지역
-    private String province;
+    @Enumerated(EnumType.STRING)
+    private Province province;
 
-    private String groupType;
+    @Enumerated(EnumType.STRING)
+    private GroupType groupType;
 
     private int ageRange;
 
-    public void updateProfile(LocalDate startDate, LocalDate endDate, String province, String groupType, int ageRange) {
+    public void updateProfile(LocalDate startDate, LocalDate endDate, Province province, GroupType groupType, int ageRange) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.province = province;

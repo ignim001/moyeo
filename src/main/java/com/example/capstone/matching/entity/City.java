@@ -1,6 +1,9 @@
 package com.example.capstone.matching.entity;
 
-public enum CITY {
+public enum City {
+    // 선택안함
+    NONE,
+
     // 서울특별시
     GANGNAM_GU,
     GANGDONG_GU,

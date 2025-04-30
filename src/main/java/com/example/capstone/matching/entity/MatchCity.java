@@ -19,9 +19,9 @@ public class MatchCity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CITY city;
+    private City city;
 
-    public MatchCity(MatchingProfile matchingProfile, CITY city) {
+    public MatchCity(MatchingProfile matchingProfile, City city) {
         this.matchingProfile = matchingProfile;
         this.city = city;
     }
