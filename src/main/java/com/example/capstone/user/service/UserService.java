@@ -35,7 +35,7 @@ public class UserService {
 
         String imageUrl;
 
-        if (profileImage != null || !profileImage.isEmpty()) {
+        if (profileImage != null && !profileImage.isEmpty()) {
             // S3 이미지 저장후 URL 저장
             imageUrl = imageService.imageUpload(profileImage);
         } else {
