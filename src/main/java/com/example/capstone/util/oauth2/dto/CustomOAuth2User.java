@@ -25,9 +25,7 @@ public class CustomOAuth2User implements OAuth2User {
     }
 
     @Override
-    public String getName() {
-        return oAuth2DTO.getProviderId();
-    }
+    public String getName() {return oAuth2DTO.getProviderId();}
 
     public String getProviderId() {
         return oAuth2DTO.getProviderId();
@@ -38,4 +36,6 @@ public class CustomOAuth2User implements OAuth2User {
     }
 
     public String getTempToken() {return oAuth2DTO.getTempToken();}
+
+    public String getNickname() {return oAuth2DTO.getNickname();}
 }

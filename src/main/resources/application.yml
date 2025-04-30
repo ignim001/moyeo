@@ -47,7 +47,9 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
-  expirationMs: 86400000
+  expirationMs: 1800000
+  temp:
+    expirationMs: 600000
 
 default:
   image-url: ${DEFAULT_IMAGE}
