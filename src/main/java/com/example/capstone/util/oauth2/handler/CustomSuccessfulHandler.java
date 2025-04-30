@@ -23,10 +23,6 @@ public class CustomSuccessfulHandler extends SimpleUrlAuthenticationSuccessHandl
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-        String providerId = oAuth2User.getProviderId();
-        String email = oAuth2User.getEmail();
-
-        String token = jwtUtil.generateToken(providerId, email);
 
         // 세션에서 redirect_uri 가져오기
         String redirectUri = (String) request.getSession().getAttribute("redirect_uri");
@@ -38,7 +34,7 @@ public class CustomSuccessfulHandler extends SimpleUrlAuthenticationSuccessHandl
         if (oAuth2User.getTempToken() != null) {
             response.sendRedirect(redirectUri + "?mode=register&token=" + oAuth2User.getTempToken());
         } else {
-            String jwtToken = jwtUtil.generateToken(oAuth2User.getProviderId(), oAuth2User.getEmail());
+            String jwtToken = jwtUtil.generateToken(oAuth2User.getProviderId(), oAuth2User.getEmail(), oAuth2User.getNickname());
             response.sendRedirect(redirectUri + "?mode=login&token=" + jwtToken);
         }
     }

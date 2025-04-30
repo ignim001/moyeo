@@ -11,4 +11,5 @@ public class OAuth2DTO {
     private String providerId;
     private String email;
     private String tempToken;
+    private String nickname;
 }

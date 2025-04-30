@@ -38,7 +38,7 @@ public class AuthController {
         UserEntity user = userService.signup(userDetails, profileRequestDto, profileImage);
 
         // 정식 토큰 발급
-        String token = jwtUtil.generateToken(user.getProviderId(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getProviderId(), user.getEmail(), user.getNickname());
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("token", token);
         return new ResponseEntity<>(loginInfo, HttpStatus.OK);

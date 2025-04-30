@@ -44,18 +44,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             return new CustomOAuth2User(OAuth2DTO.builder()
                     .providerId(existUser.getProviderId())
                     .email(existUser.getEmail())
+                    .nickname(existUser.getNickname())
                     .build());
         }
 
         // 신규 회원인 경우 임시 토큰 포함 O
-        String tempToken = jwtUtil.generateToken(providerId, oAuth2Response.getEmail());
+        String tempToken = jwtUtil.generateTempToken(providerId, oAuth2Response.getEmail());
         return new CustomOAuth2User(OAuth2DTO.builder()
                 .providerId(providerId)
                 .email(oAuth2Response.getEmail())
                 .tempToken(tempToken)
                 .build());
     }
-
-
 }
 
