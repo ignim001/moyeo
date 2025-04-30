@@ -1,4 +1,4 @@
-package com.example.capstone.util.jwt.handler;
+package com.example.capstone.util.oauth2.handler;
 
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import com.example.capstone.util.jwt.JwtUtil;

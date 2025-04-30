@@ -1,8 +1,6 @@
 package com.example.capstone.matching.repository;
 
-import com.example.capstone.matching.entity.MatchCity;
-import com.example.capstone.matching.entity.MatchTravelStyle;
-import com.example.capstone.matching.entity.MatchingProfile;
+import com.example.capstone.matching.entity.*;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -56,19 +54,18 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
         return matchingProfile.startDate.loe(endDate).and(matchingProfile.endDate.goe(startDate));
     }
 
-    private BooleanExpression provinceEq(String province) {
-        return hasText(province) ? matchingProfile.province.eq(province) : null;
+    private BooleanExpression provinceEq(Province province) {
+        return (province != null && province != Province.NONE) ? matchingProfile.province.eq(province) : null;
     }
 
-    private BooleanExpression groupTypeEq(String groupType) {
-        return hasText(groupType) ? matchingProfile.groupType.eq(groupType) : null;
+    private BooleanExpression groupTypeEq(GroupType groupType) {
+        return (groupType != null && groupType != GroupType.NONE) ? matchingProfile.groupType.eq(groupType) : null;
     }
 
     private BooleanExpression ageRangeEq(Integer ageRange) {
         if (ageRange == null) {
             return null;
         }
-
         switch (ageRange) {
             case 10:
                 return userEntity.age.between(10, 19);
@@ -81,27 +78,35 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
             case 50:
                 return userEntity.age.between(50, 59);
             case 60:
-                return userEntity.age.between(60, 69);
+                return userEntity.age.goe(60);
             default:
                 return null;
         }
     }
 
     private BooleanExpression travelStyleEq(List<MatchTravelStyle> travelStyles) {
-        if (travelStyles == null || travelStyles.isEmpty()){
+        if (travelStyles == null || travelStyles.isEmpty()) {
             return null;
         }
-        return matchTravelStyle.travelStyle.in(travelStyles.stream()
+        // NONE 필터 처리
+        List<TravelStyle> styles = travelStyles.stream()
                 .map(MatchTravelStyle::getTravelStyle)
-                .collect(Collectors.toList()));
+                .filter(style -> style != null && style != TravelStyle.NONE)
+                .collect(Collectors.toList());
+
+        return styles.isEmpty() ? null : matchTravelStyle.travelStyle.in(styles);
     }
 
     private BooleanExpression cityEq(List<MatchCity> cites) {
-        if (cites == null || cites.isEmpty()){
+        if (cites == null || cites.isEmpty()) {
             return null;
         }
-        return matchCity.city.in(cites.stream()
+        // NONE 필터 처리
+        List<City> cities = cites.stream()
                 .map(MatchCity::getCity)
-                .collect(Collectors.toList()));
+                .filter(city -> city != null && !city.equals(City.NONE))
+                .collect(Collectors.toList());
+
+        return cities.isEmpty() ? null : matchCity.city.in(cities);
     }
 }

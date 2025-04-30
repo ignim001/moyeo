@@ -1,7 +1,7 @@
 package com.example.capstone.config;
 
 import com.example.capstone.util.jwt.filter.JWTFilter;
-import com.example.capstone.util.jwt.handler.CustomSuccessfulHandler;
+import com.example.capstone.util.oauth2.handler.CustomSuccessfulHandler;
 import com.example.capstone.util.oauth2.CustomOAuth2UserService;
 import com.example.capstone.util.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;

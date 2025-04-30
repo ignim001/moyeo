@@ -30,7 +30,7 @@ public class UserService {
     public UserEntity signup(CustomOAuth2User userDetails, UserProfileReqDto dto, MultipartFile profileImage) {
         // 닉네임 중복 처리
         if (userRepository.existsByNickname(dto.getNickname())) {
-            throw new DuplicateNicknameException("Nickname already exists");
+                throw new DuplicateNicknameException("Nickname already exists");
         }
 
         String imageUrl;

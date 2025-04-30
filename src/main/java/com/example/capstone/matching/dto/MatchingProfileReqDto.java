@@ -1,6 +1,8 @@
 package com.example.capstone.matching.dto;
 
-import com.example.capstone.matching.entity.CITY;
+import com.example.capstone.matching.entity.City;
+import com.example.capstone.matching.entity.GroupType;
+import com.example.capstone.matching.entity.Province;
 import com.example.capstone.matching.entity.TravelStyle;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -19,10 +21,10 @@ public class MatchingProfileReqDto {
     private LocalDate endDate;
 
     // 도 단위 지역
-    private String province;
+    private Province province;
     // 시 단위 지역
-    private List<CITY> cities;
-    private String groupType;
+    private List<City> cities;
+    private GroupType groupType;
     private int ageRange;
     private List<TravelStyle> travelStyles;
 }
