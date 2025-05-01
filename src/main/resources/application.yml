@@ -1,19 +1,7 @@
 spring:
-  datasource:
-    url: jdbc:mysql://${RDS-ENDPOINT}:3306/${DB_NAME}?serverTimezone=Asia/Seoul&useSSL=false
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${RDS_USERNAME}
-    password: ${RDS_PASSWORD}
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-    hibernate:
-      ddl-auto: create
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: false
+  profiles:
+    active: local  # local 또는 prod 선택
 
-  # OAuth2 변수설정
   security:
     oauth2:
       client:
@@ -45,6 +33,7 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+# 공통 설정
 jwt:
   secret: ${JWT_SECRET}
   expirationMs: 1800000
@@ -54,7 +43,6 @@ jwt:
 default:
   image-url: ${DEFAULT_IMAGE}
 
-# s3
 cloud:
   aws:
     stack:
@@ -70,3 +58,48 @@ cloud:
 server:
   port: 8080
   address: 0.0.0.0
+
+
+---
+
+# local
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/moyeo
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+---
+
+# 배포
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:mysql://${RDS-ENDPOINT}:3306/${DB_NAME}?serverTimezone=Asia/Seoul&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
