@@ -32,7 +32,7 @@ public class AuthController {
             description = "닉네임, 나이, 성별, MBTI, 이미지 입력")
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> signup(
-            @AuthenticationPrincipal CustomOAuth2User userDetails, // JWT에서 추출되 임시로 세션에 저장된 사용자 정보
+            @AuthenticationPrincipal CustomOAuth2User userDetails,
             @Valid @RequestPart("userInfo") UserProfileReqDto profileRequestDto,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         UserEntity user = userService.signup(userDetails, profileRequestDto, profileImage);

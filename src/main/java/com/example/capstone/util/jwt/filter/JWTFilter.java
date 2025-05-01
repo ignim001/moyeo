@@ -24,7 +24,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
         // 해당 경로 검증 X
         String requestURI = request.getRequestURI();
         if (requestURI.startsWith("/oauth2/")) {
@@ -35,7 +34,7 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = parseJwt(request);
         CustomOAuth2User customOAuth2User;
         // 임시 토큰 검증 (회원 가입 시)
-        if (requestURI.startsWith("/auth/signup/")){
+        if (requestURI.startsWith("/auth/signup")){
             if (token == null || !jwtUtil.validateJwt(token) || !jwtUtil.getTypeFromJwt(token).equals("TEMP")){
                 filterChain.doFilter(request, response);
                 return;
