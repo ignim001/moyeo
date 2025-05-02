@@ -8,5 +8,4 @@ import java.util.Optional;
 
 public interface MatchingProfileRepository extends JpaRepository<MatchingProfile, Long>, MatchingProfileRepositoryCustom {
     Optional<MatchingProfile> findByUser(UserEntity user);
-    boolean existsByUser(UserEntity user);
 }
