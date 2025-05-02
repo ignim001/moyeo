@@ -4,6 +4,6 @@ import com.example.capstone.chat.entity.ChatRoom;
 
 import java.util.Optional;
 
-public interface ChatRoomRepositoryCustom {
+public interface ChatParticipantRepositoryCustom {
     Optional<ChatRoom> findExistRoom(Long myId, Long otherUserId);
 }

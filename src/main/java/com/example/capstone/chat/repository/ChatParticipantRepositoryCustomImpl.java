@@ -2,16 +2,13 @@ package com.example.capstone.chat.repository;
 
 import com.example.capstone.chat.entity.ChatRoom;
 import com.example.capstone.chat.entity.QChatParticipant;
-import com.example.capstone.chat.entity.QChatRoom;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
-import static com.example.capstone.chat.entity.QChatRoom.*;
-
 @RequiredArgsConstructor
-public class ChatRoomRepositoryCustomImpl implements ChatRoomRepositoryCustom {
+public class ChatParticipantRepositoryCustomImpl implements ChatParticipantRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
@@ -26,6 +23,5 @@ public class ChatRoomRepositoryCustomImpl implements ChatRoomRepositoryCustom {
                 .where(cp1.id.eq(myId),
                         cp2.id.eq(otherUserId))
                 .fetchOne());
-
     }
 }

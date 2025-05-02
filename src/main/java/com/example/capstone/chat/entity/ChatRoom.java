@@ -6,7 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
-public class ChatRoom extends BaseTimeEntity {
+public class ChatRoom {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,4 +32,15 @@ public class ChatRoom extends BaseTimeEntity {
 
     @Column(nullable = false)
     private String roomName;
+
+    @Column(nullable = false)
+    private String roomImage;
+
+    @CreationTimestamp
+    private LocalDateTime createdTime;
+    private LocalDateTime updatedTime;
+
+    public void updateChatRoom(LocalDateTime updateTime) {
+        this.updatedTime = updateTime;
+    }
 }

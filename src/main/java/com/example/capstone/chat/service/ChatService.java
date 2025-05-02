@@ -18,7 +18,10 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,9 +34,7 @@ public class ChatService {
     private final ReadStatusRepository readStatusRepository;
     private final UserRepository userRepository;
 
-    // Todo 채팅 기본 기능 구현 (메시지 저장, 이전 메시지 조회, 읽음 처리, 채팅방 목록 조회, 나가기)
-    // Todo 1:1 채팅 방 생성 기능 구현
-
+    // Todo 채팅 기본 기능 구현 (메시지 저장, 이전 메시지 조회, 읽음 처리, 채팅방 목록 조회, 나가기, 채팅방 생성)
     // 메시지 저장
     public void saveMessage(Long roomId, ChatMessageDto chatMessageDto) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
@@ -49,6 +50,7 @@ public class ChatService {
                 .build();
 
         chatMessageRepository.save(chatMessage);
+        chatRoom.updateChatRoom(LocalDateTime.now());
 
         // 해당 메시지에 대한 읽음 처리
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
@@ -68,16 +70,21 @@ public class ChatService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUser(user);
+        List<ChatParticipant> sortedChatParticipants = chatParticipants.stream()
+                .sorted(Comparator.comparing((ChatParticipant c) -> c.getChatRoom().getUpdatedTime()).reversed())
+                .collect(Collectors.toList());
 
-        return chatParticipants.stream()
+        return sortedChatParticipants.stream()
                 .map(c -> MyChatRoomListResDto.builder()
                         .roomId(c.getChatRoom().getId())
                         .otherUserNickname(c.getChatRoom().getRoomName())
                         .unReadCount(readStatusRepository.countByChatRoomAndUserAndIsReadFalse(c.getChatRoom(), user))
+                        .otherUserImageUrl(c.getChatRoom().getRoomImage())
                         .build())
                 .collect(Collectors.toList());
     }
 
+    // 채팅방 생성
     public Long createRoom(CustomOAuth2User userDetails, String otherUserNickname) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                         .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -85,23 +92,84 @@ public class ChatService {
         UserEntity otherUser = userRepository.findByNickname(otherUserNickname)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        // Todo QueryDsl 이용해 해당 사용자간 기존 채팅방 존재여부 확인 쿼리 작성
-
+        Optional<ChatRoom> existRoom = chatParticipantRepository.findExistRoom(user.getId(), otherUser.getId());
+        if (existRoom.isPresent()){
+            return existRoom.get().getId();
+        }
 
         ChatRoom newRoom = ChatRoom.builder()
                 .roomName(otherUserNickname)
+                .roomImage(otherUser.getProfileImageUrl())
                 .build();
+
         chatRoomRepository.save(newRoom);
         addParticipantToRoom(newRoom, user);
         addParticipantToRoom(newRoom, otherUser);
         return newRoom.getId();
     }
 
+    // 채팅방 참여자 추가
     private void addParticipantToRoom(ChatRoom chatRoom, UserEntity user) {
         ChatParticipant chatParticipant = ChatParticipant.builder()
                 .chatRoom(chatRoom)
                 .user(user)
                 .build();
         chatParticipantRepository.save(chatParticipant);
+    }
+
+    // 채팅방 나가기
+    public void leaveRoom(CustomOAuth2User userDetails, Long roomId) {
+        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
+                .orElseThrow(() -> new UserNotFoundException("User not Found"));
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("Room not found"));
+
+        ChatParticipant chatParticipant = chatParticipantRepository.findByUserAndChatRoom(user, chatRoom)
+                .orElseThrow(() -> new EntityNotFoundException("ChatParticipant not found"));
+        chatParticipantRepository.delete(chatParticipant);
+
+        // 모든 참여자가 나간경우 채팅방 삭제
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
+        if (chatParticipants.isEmpty()) {
+            chatRoomRepository.delete(chatRoom);
+        }
+    }
+
+    // 이전 메시지 조회
+    public List<ChatMessageDto> getChatHistory(CustomOAuth2User userDetails, Long roomId) {
+        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
+                .orElseThrow(() -> new UserNotFoundException("User not Found"));
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("ChatRoom not Found"));
+
+        // 조회하려는 사용자가 채팅방에 속해있는 사용자인지 검증
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
+        boolean check = false;
+        check = chatParticipants.stream()
+                .anyMatch(c -> c.getUser().equals(user));
+
+        if (!check) throw new IllegalArgumentException("본인이 속하지 않은 채팅방");
+
+        List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoomOrderByCreatedTimeAsc(chatRoom);
+        return chatMessages.stream()
+                .map(m -> ChatMessageDto.builder()
+                        .message(m.getContent())
+                        .sender(m.getUser().getNickname())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // Subscribe 요청 사용자 검증
+    public boolean isRoomParticipant(String userId, Long roomId) {
+        UserEntity user = userRepository.findByProviderId(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("ChatRoom not found"));
+
+        return chatRoom.getChatParticipants().stream()
+                .anyMatch(c -> c.getUser().equals(user));
     }
 }
