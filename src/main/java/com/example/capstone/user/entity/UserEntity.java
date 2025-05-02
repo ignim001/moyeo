@@ -1,6 +1,7 @@
 package com.example.capstone.user.entity;
 
 import com.example.capstone.matching.entity.MatchingProfile;
+import com.example.capstone.util.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +10,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class UserEntity {
+public class UserEntity extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

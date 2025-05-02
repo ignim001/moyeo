@@ -24,8 +24,8 @@ public class UserController {
             description = "회원 수정시 화면에 출력할 회원정보 조회")
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(
-            @AuthenticationPrincipal CustomOAuth2User user) {
-        UserProfileResDto findUser = userService.findUser(user);
+            @AuthenticationPrincipal CustomOAuth2User userDetails) {
+        UserProfileResDto findUser = userService.findUser(userDetails);
         return new ResponseEntity<>(findUser, HttpStatus.OK);
     }
 
