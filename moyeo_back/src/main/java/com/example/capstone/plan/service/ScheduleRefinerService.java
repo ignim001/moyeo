@@ -168,16 +168,6 @@ public class ScheduleRefinerService {
         return null;
     }
 
-    public Map<String, Object> generateAndRefineScheduleForApi(String prompt) {
-        String gptResponse = openAiClient.callGpt(prompt);
-        List<PlaceDetailDto> places = getRefinedPlacesFromPrompt(gptResponse);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("originalGptResponse", gptResponse);
-        result.put("refinedSchedule", places);
-
-        return result;
-    }
 
     private String extractCoreKeyword(String name) {
         return name.replaceAll("(관람|체험|산책|투어|탐방|감상|방문|구경|트래킹)$", "").trim();
@@ -214,7 +204,6 @@ public class ScheduleRefinerService {
             dto.setDescription(place.getDescription());
             dto.setEstimatedCost(place.getEstimatedCost());
             dto.setGptOriginalName(place.getGptOriginalName());
-            // fromPrevious는 여기선 없음 (edit 시에 새로 계산됨)
             return dto;
         }
     }

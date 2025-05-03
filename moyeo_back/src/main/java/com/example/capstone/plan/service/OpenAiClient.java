@@ -9,6 +9,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class OpenAiClient {
@@ -16,46 +19,48 @@ public class OpenAiClient {
     @Value("${openai.api-key}")
     private String apiKey;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    private WebClient webClient;
+
+    // 생성자에서 WebClient 초기화
+    public void initialize() {
+        this.webClient = WebClient.builder()
+                .baseUrl("https://api.openai.com/v1/chat/completions")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
 
     public String callGpt(String prompt) {
-        try {
-            // WebClient는 apiKey가 주입된 후에 생성해야 함!
-            WebClient webClient = WebClient.builder()
-                    .baseUrl("https://api.openai.com/v1/chat/completions")
-                    .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .build();
+        if (webClient == null) {
+            initialize(); // 처음 요청 시 초기화
+        }
 
-            // 요청 바디 구성
-            String rawJson = webClient.post()
-                    .bodyValue(
-                            java.util.Map.of(
-                                    "model", "chatgpt-4o-latest",
-                                    "messages", java.util.List.of(
-                                            java.util.Map.of(
-                                                    "role", "user",
-                                                    "content", prompt
-                                            )
-                                    )
+        try {
+            String requestBody = objectMapper.writeValueAsString(
+                    Map.of(
+                            "model", "gpt-4o-latest",
+                            "messages", List.of(
+                                    Map.of("role", "user", "content", prompt)
                             )
                     )
+            );
+
+            String responseBody = webClient.post()
+                    .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
 
-            // JSON 파싱
-            JsonNode node = objectMapper.readTree(rawJson);
-
-            // 안전하게 응답 탐색
-            return node.path("choices")
+            JsonNode json = objectMapper.readTree(responseBody);
+            return json.path("choices")
                     .get(0)
                     .path("message")
                     .path("content")
                     .asText();
 
         } catch (Exception e) {
-            throw new RuntimeException("GPT 응답 처리 중 오류 발생: " + e.getMessage(), e);
+            throw new RuntimeException("GPT 응답 처리 중 오류", e);
         }
     }
 }

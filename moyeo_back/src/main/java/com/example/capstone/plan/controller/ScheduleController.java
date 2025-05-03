@@ -29,7 +29,6 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final GptCostAndTimePromptBuilder promptBuilder;
     private final OpenAiClient openAiClient;
-    private final PlaceUpdateService placeUpdateService;
     private final ScheduleEditService scheduleEditService;
     private final ScheduleRefinerService scheduleRefinerService;
 

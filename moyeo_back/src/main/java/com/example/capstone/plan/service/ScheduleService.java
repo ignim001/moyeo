@@ -2,9 +2,7 @@ package com.example.capstone.plan.service;
 
 
 import com.example.capstone.plan.dto.common.FromPreviousDto;
-import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
-import com.example.capstone.plan.dto.request.PlaceUpdateRequest;
 import com.example.capstone.plan.dto.request.SaveScheduleRequest;
 import com.example.capstone.plan.dto.request.TravelPlanRequest;
 import com.example.capstone.plan.dto.response.DaySummaryResponse;
@@ -72,53 +70,6 @@ public class ScheduleService {
         return new ScheduleDetailFullResponse(costAndTimePromptBuilder.parseGptResponse(costResponse, places));
     }
 
-    // ✅ 문자열(JSON)로 반환하는 테스트용 메서드
-    public String generateFullScheduleAsString(String prompt) {
-        try {
-            List<PlaceDetailDto> places = scheduleRefinerService.getRefinedPlacesFromPrompt(prompt);
-
-            // 설명
-            List<String> placeNames = places.stream().map(PlaceDetailDto::getName).toList();
-            String descPrompt = descriptionPromptBuilder.build(placeNames);
-            String descResponse = openAiClient.callGpt(descPrompt);
-            var descriptionMap = parseDescriptionMap(descResponse);
-            for (PlaceDetailDto place : places) {
-                String desc = descriptionMap.get(place.getName());
-                if (desc != null) place.setDescription(desc);
-            }
-
-            // 예산 및 이동시간
-            String costPrompt = costAndTimePromptBuilder.build(places);
-            String costResponse = openAiClient.callGpt(costPrompt);
-
-            return objectMapper.writeValueAsString(
-                    new ScheduleDetailFullResponse(costAndTimePromptBuilder.parseGptResponse(costResponse, places))
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "{}";
-        }
-    }
-
-    public List<PlaceDetailDto> getRefinedPlaces(Long scheduleId) {
-        return List.of(); // DB 연동 후 구현 예정
-    }
-
-    public List<PlaceDetailDto> getRefinedPlacesFromPrompt(String gptScheduleJson) {
-        return scheduleRefinerService.getRefinedPlacesFromPrompt(gptScheduleJson);
-    }
-
-    public ScheduleDetailFullResponse getFullDetailFromPrompt(String gptScheduleJson) throws Exception {
-        List<PlaceDetailDto> places = scheduleRefinerService.getRefinedPlacesFromPrompt(gptScheduleJson);
-        String prompt = costAndTimePromptBuilder.build(places);
-        String gptResponse = openAiClient.callGpt(prompt);
-        return new ScheduleDetailFullResponse(costAndTimePromptBuilder.parseGptResponse(gptResponse, places));
-    }
-
-    public Map<String, Object> generateAndRefineScheduleForApi(String prompt) {
-        return scheduleRefinerService.generateAndRefineScheduleForApi(prompt);
-    }
-
     private Map<String, String> parseDescriptionMap(String gptResponse) {
         Map<String, String> map = new java.util.LinkedHashMap<>();
         try (java.util.Scanner scanner = new java.util.Scanner(gptResponse)) {
@@ -135,33 +86,6 @@ public class ScheduleService {
         }
         return map;
     }
-    public ScheduleDetailFullResponse updatePlace(PlaceUpdateRequest request) throws Exception {
-        // 1. KakaoMap으로 새 장소 검색
-        KakaoPlaceDto kakaoPlace = kakaoMapClient.searchPlaceByKeyword(request.getNewPlaceName());
-
-        // 2. GPT로 한줄 설명 생성
-        String descPrompt = descriptionPromptBuilder.build(List.of(kakaoPlace.getPlaceName()));
-        String descResponse = openAiClient.callGpt(descPrompt);
-        String description = parseDescriptionMap(descResponse).get(kakaoPlace.getPlaceName());
-
-        // 3. 장소 객체 생성
-        PlaceDetailDto updatedPlace = new PlaceDetailDto();
-        updatedPlace.setName(request.getNewPlaceName());
-        updatedPlace.setAddress(kakaoPlace.getAddress());
-        updatedPlace.setLat(kakaoPlace.getLatitude());
-        updatedPlace.setLng(kakaoPlace.getLongitude());
-        updatedPlace.setType("관광지"); // 상황 따라 수정
-        updatedPlace.setDescription(description);
-
-        // 4. 예산 및 이동 시간 추정
-        String costPrompt = costAndTimePromptBuilder.build(List.of(updatedPlace));
-        String costResponse = openAiClient.callGpt(costPrompt);
-
-        return new ScheduleDetailFullResponse(
-                costAndTimePromptBuilder.parseGptResponse(costResponse, List.of(updatedPlace))
-        );
-    }
-
 
     public List<DaySummaryResponse> createDaySummaries(Map<String, List<PlaceDetailDto>> groupedByDate) {
         List<DaySummaryResponse> summaries = new java.util.ArrayList<>();
@@ -271,19 +195,5 @@ public class ScheduleService {
         if (d == 0) return "D-Day";
         return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
     }
-
-
-
-
-    private int calculateTotalEstimatedCost(List<PlaceDetailDto> places) {
-        return places.stream()
-                .map(PlaceDetailDto::getEstimatedCost)
-                .filter(cost -> cost != null)
-                .mapToInt(Integer::intValue)
-                .sum();
-    }
-
-
-
 
 }
