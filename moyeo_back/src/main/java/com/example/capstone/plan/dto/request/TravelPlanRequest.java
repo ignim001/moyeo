@@ -3,6 +3,7 @@ package com.example.capstone.plan.dto.request;
 
 import com.example.capstone.plan.entity.CITY;
 import com.example.capstone.plan.entity.Mbti;
+import com.example.capstone.plan.entity.PeopleGroup;
 import com.example.capstone.plan.entity.TravelStyle;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,6 @@ public class TravelPlanRequest {
     private List<CITY> destination;      // 목적지 (선택)(*도단위, 시단위*)
     private Mbti mbti;             // MBTI (선택)
     private List<TravelStyle> travelStyle;      // 여행 성향 (선택)
-    private Integer numPeople;       // 여행 인원 수 (단둘이, 여럿이)
+    private PeopleGroup peopleGroup;       // 여행 인원 수 (단둘이, 여럿이)
     private Long budget;
 }

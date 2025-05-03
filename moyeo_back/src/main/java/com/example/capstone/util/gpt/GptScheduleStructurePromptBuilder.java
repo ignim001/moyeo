@@ -17,7 +17,6 @@ public class GptScheduleStructurePromptBuilder {
         sb.append(String.format("%s부터 %s까지 %s로 여행을 떠날 예정이야.\n\n",
                 formattedStart,
                 formattedEnd,
-                (request.getDestination() != null ? request.getDestination().name() : "국내")));
         sb.append("""
 ✅ 하루 일정은 반드시 아래 순서를 따라야 해:
 1. 아침 (type: 아침)
@@ -54,7 +53,7 @@ public class GptScheduleStructurePromptBuilder {
                  - 👉 반드시 **KakaoMap에서 검색 가능한 실제 업종 기반 키워드**로 구성해줘.
   - location 필드는 생략하거나 null로 둬도 돼
   - **숙소는 가능한 한 그날 마지막 관광지에서 가까운 지역 기반 숙소로 작성해줘**
-""");
+""")));
 
         if (request.getMbti() != null) {
             sb.append("- MBTI: ").append(request.getMbti()).append("\n");
@@ -62,8 +61,8 @@ public class GptScheduleStructurePromptBuilder {
         if (request.getTravelStyle() != null) {
             sb.append("- 여행 성향: ").append(request.getTravelStyle()).append("\n");
         }
-        if (request.getNumPeople() != null) {
-            sb.append("- 여행 인원: ").append(request.getNumPeople()).append("명\n");
+        if (request.getPeopleGroup() != null) {
+            sb.append("- 여행 인원: ").append(request.getPeopleGroup()).append("명\n");
         }
         if (request.getBudget() != null) {
             sb.append("- 예산: ").append(request.getBudget()).append("원\n");
