@@ -8,17 +8,15 @@ import com.example.capstone.matching.entity.MatchCity;
 import com.example.capstone.matching.entity.MatchTravelStyle;
 import com.example.capstone.matching.entity.MatchingProfile;
 import com.example.capstone.user.entity.UserEntity;
-import com.example.capstone.matching.exception.MatchingProfileNotFoundException;
-import com.example.capstone.user.exception.UserNotFoundException;
 import com.example.capstone.matching.repository.MatchingProfileRepository;
 import com.example.capstone.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +29,7 @@ public class MatchingService {
     @Transactional
     public void createMatchProfile(CustomOAuth2User userDetails, MatchingProfileReqDto profileRequestDto) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
         Optional<MatchingProfile> optionalProfile = matchingProfileRepository.findByUser(user);
 
@@ -75,7 +73,7 @@ public class MatchingService {
             profile.getTravelStyles().addAll(
                     profileRequestDto.getTravelStyles().stream()
                             .map(style -> new MatchTravelStyle(profile, style))
-                            .collect(Collectors.toList())
+                            .toList()
             );
         }
     }
@@ -85,7 +83,7 @@ public class MatchingService {
             profile.getMatchCities().addAll(
                     profileRequestDto.getCities().stream()
                             .map(city -> new MatchCity(profile, city))
-                            .collect(Collectors.toList())
+                            .toList()
             );
         }
     }
@@ -94,10 +92,10 @@ public class MatchingService {
     @Transactional(readOnly = true)
     public MatchingUserProfileResDto matchingUserProfile(String nickname) {
         UserEntity user = userRepository.findByNickname(nickname)
-                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
         MatchingProfile matchingProfile = matchingProfileRepository.findByUser(user)
-                .orElseThrow(() -> new MatchingProfileNotFoundException("Matching profile not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Matching profile not found"));
 
         return MatchingUserProfileResDto.builder()
                 .nickname(user.getNickname())
@@ -110,10 +108,10 @@ public class MatchingService {
                 // Enum 타입 변환
                 .cities(matchingProfile.getMatchCities().stream()
                         .map(MatchCity::getCity)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .travelStyles(matchingProfile.getTravelStyles().stream()
                         .map(MatchTravelStyle::getTravelStyle)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .build();
     }
 
@@ -121,17 +119,17 @@ public class MatchingService {
     @Transactional(readOnly = true)
     public List<MatchingListProfileResDto> matchingResult(CustomOAuth2User userDetails) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
         MatchingProfile profile = matchingProfileRepository.findByUser(user)
-                .orElseThrow(() -> new MatchingProfileNotFoundException("Matching profile not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Matching profile not found"));
         
         // 사용자 매칭정보와 유사한 매칭정보 조회
         List<MatchingProfile> matchingProfiles = matchingProfileRepository.matchingProfile(profile);
 
         return matchingProfiles.stream()
                 .map(this::convertToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private MatchingListProfileResDto convertToResponse(MatchingProfile profile) {
@@ -143,7 +141,7 @@ public class MatchingService {
                 profile.getEndDate(),
                 profile.getTravelStyles().stream()
                         .map(MatchTravelStyle::getTravelStyle)
-                        .collect(Collectors.toList())
+                        .toList()
         );
     }
 }
