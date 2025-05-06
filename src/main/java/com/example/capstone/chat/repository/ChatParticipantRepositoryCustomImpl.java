@@ -1,11 +1,18 @@
 package com.example.capstone.chat.repository;
 
+import com.example.capstone.chat.entity.ChatParticipant;
 import com.example.capstone.chat.entity.ChatRoom;
 import com.example.capstone.chat.entity.QChatParticipant;
+import com.example.capstone.chat.entity.QChatRoom;
+import com.example.capstone.user.entity.UserEntity;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.Optional;
+
+import static com.example.capstone.chat.entity.QChatParticipant.*;
+import static com.example.capstone.chat.entity.QChatRoom.*;
 
 @RequiredArgsConstructor
 public class ChatParticipantRepositoryCustomImpl implements ChatParticipantRepositoryCustom {
@@ -23,5 +30,14 @@ public class ChatParticipantRepositoryCustomImpl implements ChatParticipantRepos
                 .where(cp1.id.eq(myId),
                         cp2.id.eq(otherUserId))
                 .fetchOne());
+    }
+
+    @Override
+    public List<ChatParticipant> findByUserOrderByChatRoomUpdatedTimeDesc(UserEntity user) {
+        return queryFactory.selectFrom(chatParticipant)
+                .join(chatParticipant.chatRoom, chatRoom).fetchJoin()
+                .where(chatParticipant.user.id.eq(user.getId()))
+                .orderBy(chatParticipant.chatRoom.updatedTime.desc())
+                .fetch();
     }
 }

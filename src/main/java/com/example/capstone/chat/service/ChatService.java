@@ -1,7 +1,10 @@
 package com.example.capstone.chat.service;
 
-import com.example.capstone.chat.dto.ChatMessageDto;
+import com.example.capstone.chat.controller.StompHandler;
+import com.example.capstone.chat.dto.ChatMessageReqDto;
+import com.example.capstone.chat.dto.ChatMessageResDto;
 import com.example.capstone.chat.dto.MyChatRoomListResDto;
+import com.example.capstone.chat.dto.ReadNoticeDto;
 import com.example.capstone.chat.entity.ChatMessage;
 import com.example.capstone.chat.entity.ChatParticipant;
 import com.example.capstone.chat.entity.ChatRoom;
@@ -16,12 +19,12 @@ import com.example.capstone.user.repository.UserRepository;
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,58 +36,79 @@ public class ChatService {
     private final ChatParticipantRepository chatParticipantRepository;
     private final ReadStatusRepository readStatusRepository;
     private final UserRepository userRepository;
+    private final StompHandler stompHandler;
+    private final SimpMessageSendingOperations messagingTemplate;
 
-    // Todo 채팅 기본 기능 구현 (메시지 저장, 이전 메시지 조회, 읽음 처리, 채팅방 목록 조회, 나가기, 채팅방 생성)
     // 메시지 저장
-    public void saveMessage(Long roomId, ChatMessageDto chatMessageDto) {
+    @Transactional
+    public ChatMessageResDto saveMessage(Long roomId, ChatMessageReqDto chatMessageReqDto) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("Room not found"));
 
-        UserEntity sender = userRepository.findByNickname(chatMessageDto.getSender())
+        UserEntity sender = userRepository.findByNickname(chatMessageReqDto.getSender())
                 .orElseThrow(() -> new EntityNotFoundException("member cannot be found"));
 
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
                 .user(sender)
-                .content(chatMessageDto.getMessage())
+                .content(chatMessageReqDto.getMessage())
                 .build();
 
-        chatMessageRepository.save(chatMessage);
         chatRoom.updateChatRoom(LocalDateTime.now());
+        chatRoomRepository.save(chatRoom);
+        chatMessageRepository.save(chatMessage);
 
-        // 해당 메시지에 대한 읽음 처리
+        // 해당 메시지에 대한 읽음 처리 (현재 접속한 참여자 정보 포함)
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
-        chatParticipants.stream()
-                .map(c -> ReadStatus.builder()
-                        .chatRoom(chatRoom)
-                        .user(c.getUser())
-                        .chatMessage(chatMessage)
-                        .isRead(c.getUser().equals(sender)) 
-                        .build())
-                .forEach(readStatusRepository::save);
+        Set<String> subscribers = stompHandler.getSubscribersProviderId(roomId);
+        List<ReadStatus> readStatuses = new ArrayList<>();
+        for (ChatParticipant participant : chatParticipants) {
+            UserEntity user = participant.getUser();
+            boolean isSender = user.equals(sender);
+            boolean isSubscribed = subscribers.contains(user.getProviderId());
+            boolean isRead = isSender || isSubscribed;
+
+            ReadStatus readStatus = ReadStatus.builder()
+                    .chatRoom(chatRoom)
+                    .user(user)
+                    .chatMessage(chatMessage)
+                    .isRead(isRead)
+                    .build();
+
+            readStatuses.add(readStatus);
+            readStatusRepository.save(readStatus);
+        }
+
+        return ChatMessageResDto.builder()
+                .message(chatMessageReqDto.getMessage())
+                .sender(chatMessageReqDto.getSender())
+                .unReadUserCount(readStatuses.stream()
+                        .filter(rs -> !rs.getIsRead())
+                        .count())
+                .timestamp(chatMessage.getCreatedTime())
+                .build();
     }
 
     // 자신이 속한 채팅방 조회
+    @Transactional(readOnly = true)
     public List<MyChatRoomListResDto> getMyRoom(CustomOAuth2User userDetails) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUser(user);
-        List<ChatParticipant> sortedChatParticipants = chatParticipants.stream()
-                .sorted(Comparator.comparing((ChatParticipant c) -> c.getChatRoom().getUpdatedTime()).reversed())
-                .collect(Collectors.toList());
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserOrderByChatRoomUpdatedTimeDesc(user);
 
-        return sortedChatParticipants.stream()
+        return chatParticipants.stream()
                 .map(c -> MyChatRoomListResDto.builder()
                         .roomId(c.getChatRoom().getId())
                         .otherUserNickname(c.getChatRoom().getRoomName())
-                        .unReadCount(readStatusRepository.countByChatRoomAndUserAndIsReadFalse(c.getChatRoom(), user))
+                        .unReadCount(readStatusRepository.countByChatRoomAndUserAndIsReadFalse(c.getChatRoom(), user)) // N + 1 문제
                         .otherUserImageUrl(c.getChatRoom().getRoomImage())
                         .build())
                 .collect(Collectors.toList());
     }
 
     // 채팅방 생성
+    @Transactional
     public Long createRoom(CustomOAuth2User userDetails, String otherUserNickname) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                         .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -118,6 +142,7 @@ public class ChatService {
     }
 
     // 채팅방 나가기
+    @Transactional
     public void leaveRoom(CustomOAuth2User userDetails, Long roomId) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User not Found"));
@@ -137,7 +162,8 @@ public class ChatService {
     }
 
     // 이전 메시지 조회
-    public List<ChatMessageDto> getChatHistory(CustomOAuth2User userDetails, Long roomId) {
+    @Transactional(readOnly = true)
+    public List<ChatMessageResDto> getChatHistory(CustomOAuth2User userDetails, Long roomId) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new UserNotFoundException("User not Found"));
 
@@ -154,14 +180,19 @@ public class ChatService {
 
         List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoomOrderByCreatedTimeAsc(chatRoom);
         return chatMessages.stream()
-                .map(m -> ChatMessageDto.builder()
+                .map(m -> ChatMessageResDto.builder()
                         .message(m.getContent())
                         .sender(m.getUser().getNickname())
+                        .unReadUserCount(m.getReadStatuses().stream()
+                                .filter(rs -> !rs.getIsRead())
+                                .count())
+                        .timestamp(m.getCreatedTime())
                         .build())
                 .collect(Collectors.toList());
     }
 
     // Subscribe 요청 사용자 검증
+    @Transactional(readOnly = true)
     public boolean isRoomParticipant(String userId, Long roomId) {
         UserEntity user = userRepository.findByProviderId(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -171,5 +202,31 @@ public class ChatService {
 
         return chatRoom.getChatParticipants().stream()
                 .anyMatch(c -> c.getUser().equals(user));
+    }
+
+    // 읽음 처리
+    @Transactional
+    public void readMessage(CustomOAuth2User userDetails, Long roomId) {
+        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
+                .orElseThrow(() -> new UserNotFoundException("User not Found"));
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("ChatRoom not found"));
+
+        List<ReadStatus> readStatus = readStatusRepository.findByUserAndChatRoom(user, chatRoom);
+        if (!readStatus.isEmpty()) {
+            for (ReadStatus status : readStatus) {
+                status.updateIsRead(true);
+            }
+
+            Set<String> subscribers = new HashSet<>(stompHandler.getSubscribersProviderId(roomId));
+            subscribers.remove(user.getProviderId());
+
+            // 자신을 제외한 구독자가 존재할 경우 알림 전송
+            if (!subscribers.isEmpty()) {
+                ReadNoticeDto notice = new ReadNoticeDto(user.getNickname());
+                messagingTemplate.convertAndSend("/queue/" + roomId + "/read", notice);
+            }
+        }
     }
 }

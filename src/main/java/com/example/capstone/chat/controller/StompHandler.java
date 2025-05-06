@@ -11,40 +11,55 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Component
 @RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
     private final ChatService chatService;
+    private final ConcurrentHashMap<String, Set<String>> roomSubscribers = new ConcurrentHashMap<>();
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        final StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        if (accessor.getCommand() == StompCommand.CONNECT) {
-            String bearerToken = accessor.getFirstNativeHeader("Authorization");
-            String token = bearerToken.substring(7);
-            jwtUtil.validateJwt(token);
-        }
-
-        if (accessor.getCommand() == StompCommand.SEND) {
-            String roomId = accessor.getDestination().split("/")[2];
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+            validateJwt(accessor);
         }
         
-        if (accessor.getCommand() == StompCommand.SUBSCRIBE) {
-            String bearerToken = accessor.getFirstNativeHeader("Authorization");
-            String token = bearerToken.substring(7);
-            jwtUtil.validateJwt(token);
-
+        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            String token = validateJwt(accessor);
             String userId = jwtUtil.getProviderIdFromJwt(token);
             String roomId = accessor.getDestination().split("/")[2];
-            
+
             if (!chatService.isRoomParticipant(userId, Long.parseLong(roomId))){
                 throw new AuthenticationServiceException("해당 room 에 권한이 없습니다");
             }
-        }
 
+            roomSubscribers.computeIfAbsent(roomId, k -> new HashSet<>()).add(userId);
+
+        }else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+            String token = validateJwt(accessor);
+            String userId = jwtUtil.getProviderIdFromJwt(token);
+            roomSubscribers.values().forEach(s -> s.remove(userId));
+        }
         return message;
+    }
+
+    public String validateJwt(StompHeaderAccessor accessor) {
+        String bearerToken = accessor.getFirstNativeHeader("Authorization");
+        String token = bearerToken.substring(7);
+        jwtUtil.validateJwt(token);
+        return token;
+    }
+
+    // Service 계층에서 Subscribe 정보 참조
+    public Set<String> getSubscribersProviderId(Long roomId) {
+        return roomSubscribers.getOrDefault(roomId, Collections.emptySet());
     }
 }
