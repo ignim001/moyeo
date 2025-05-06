@@ -14,7 +14,6 @@ import com.example.capstone.chat.repository.ChatParticipantRepository;
 import com.example.capstone.chat.repository.ChatRoomRepository;
 import com.example.capstone.chat.repository.ReadStatusRepository;
 import com.example.capstone.user.entity.UserEntity;
-import com.example.capstone.user.exception.UserNotFoundException;
 import com.example.capstone.user.repository.UserRepository;
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,10 +41,10 @@ public class ChatService {
     @Transactional
     public ChatMessageResDto saveMessage(Long roomId, ChatMessageReqDto chatMessageReqDto) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Room not found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Room not found"));
 
         UserEntity sender = userRepository.findByNickname(chatMessageReqDto.getSender())
-                .orElseThrow(() -> new EntityNotFoundException("member cannot be found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("member cannot be found"));
 
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
@@ -93,7 +91,7 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<MyChatRoomListResDto> getMyRoom(CustomOAuth2User userDetails) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
 
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserOrderByChatRoomUpdatedTimeDesc(user);
 
@@ -104,17 +102,17 @@ public class ChatService {
                         .unReadCount(readStatusRepository.countByChatRoomAndUserAndIsReadFalse(c.getChatRoom(), user)) // N + 1 문제
                         .otherUserImageUrl(c.getChatRoom().getRoomImage())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // 채팅방 생성
     @Transactional
     public Long createRoom(CustomOAuth2User userDetails, String otherUserNickname) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                        .orElseThrow(() -> new UserNotFoundException("User not found"));
+                        .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         UserEntity otherUser = userRepository.findByNickname(otherUserNickname)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         Optional<ChatRoom> existRoom = chatParticipantRepository.findExistRoom(user.getId(), otherUser.getId());
         if (existRoom.isPresent()){
@@ -145,13 +143,13 @@ public class ChatService {
     @Transactional
     public void leaveRoom(CustomOAuth2User userDetails, Long roomId) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not Found"));
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Room not found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Room not found"));
 
         ChatParticipant chatParticipant = chatParticipantRepository.findByUserAndChatRoom(user, chatRoom)
-                .orElseThrow(() -> new EntityNotFoundException("ChatParticipant not found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ChatParticipant not found"));
         chatParticipantRepository.delete(chatParticipant);
 
         // 모든 참여자가 나간경우 채팅방 삭제
@@ -165,10 +163,10 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ChatMessageResDto> getChatHistory(CustomOAuth2User userDetails, Long roomId) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not Found"));
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("ChatRoom not Found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ChatRoom not Found"));
 
         // 조회하려는 사용자가 채팅방에 속해있는 사용자인지 검증
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
@@ -188,17 +186,17 @@ public class ChatService {
                                 .count())
                         .timestamp(m.getCreatedTime())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // Subscribe 요청 사용자 검증
     @Transactional(readOnly = true)
     public boolean isRoomParticipant(String userId, Long roomId) {
         UserEntity user = userRepository.findByProviderId(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("ChatRoom not found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ChatRoom not found"));
 
         return chatRoom.getChatParticipants().stream()
                 .anyMatch(c -> c.getUser().equals(user));
@@ -208,10 +206,10 @@ public class ChatService {
     @Transactional
     public void readMessage(CustomOAuth2User userDetails, Long roomId) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not Found"));
 
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("ChatRoom not found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ChatRoom not found"));
 
         List<ReadStatus> readStatus = readStatusRepository.findByUserAndChatRoom(user, chatRoom);
         if (!readStatus.isEmpty()) {

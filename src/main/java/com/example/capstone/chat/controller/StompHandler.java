@@ -3,6 +3,7 @@ package com.example.capstone.chat.controller;
 import com.example.capstone.chat.service.ChatService;
 import com.example.capstone.util.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -17,12 +18,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
     private final ChatService chatService;
     private final ConcurrentHashMap<String, Set<String>> roomSubscribers = new ConcurrentHashMap<>();
+
+    public StompHandler(JwtUtil jwtUtil, @Lazy ChatService chatService) {
+        this.jwtUtil = jwtUtil;
+        this.chatService = chatService;
+    }
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
