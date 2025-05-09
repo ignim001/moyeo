@@ -1,10 +1,12 @@
 package com.example.capstone.plan.dto.common;
 
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class EditActionDto {
     private String action; // "add", "update", "delete", "reorder"
     private int day;

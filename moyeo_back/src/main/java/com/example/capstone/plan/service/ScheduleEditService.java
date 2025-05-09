@@ -2,8 +2,10 @@ package com.example.capstone.plan.service;
 
 import com.example.capstone.plan.dto.common.EditActionDto;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
-import com.example.capstone.plan.dto.request.ScheduleEditRequest;
-import com.example.capstone.plan.dto.response.ScheduleDetailFullResponse;
+import com.example.capstone.plan.dto.request.ScheduleEditReqDto;
+import com.example.capstone.plan.dto.response.FullScheduleResDto;
+import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
+import com.example.capstone.plan.dto.response.FullScheduleResDto.PlaceResponse;
 import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import com.example.capstone.util.gpt.GptAddPlacePromptBuilder;
 import com.example.capstone.util.gpt.GptCostAndTimePromptBuilder;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +28,8 @@ public class ScheduleEditService {
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper;
 
-    public ScheduleDetailFullResponse applyEditRequest(
-            ScheduleEditRequest request,
-            List<PlaceDetailDto> originalSchedule
-    ) throws Exception {
-        List<PlaceDetailDto> currentSchedule = new ArrayList<>(originalSchedule);
+    public FullScheduleResDto applyEditRequest(ScheduleEditReqDto request) throws Exception {
+        List<PlaceDetailDto> currentSchedule = new ArrayList<>(request.getOriginalSchedule());
 
         for (EditActionDto action : request.getEdits()) {
             switch (action.getAction()) {
@@ -49,9 +49,34 @@ public class ScheduleEditService {
 
         String costPrompt = costAndTimePromptBuilder.build(currentSchedule);
         String gptResponse = openAiClient.callGpt(costPrompt);
-        List<ScheduleDetailFullResponse.PlaceResponse> parsed = costAndTimePromptBuilder.parseGptResponse(gptResponse, currentSchedule);
+        List<PlaceResponse> responses = costAndTimePromptBuilder.parseGptResponse(gptResponse, currentSchedule);
+        List<PlaceDetailDto> enrichedPlaces = responses.stream().map(PlaceResponse::toDto).toList();
 
-        return new ScheduleDetailFullResponse(parsed);
+        Map<String, List<PlaceDetailDto>> groupedByDate = enrichedPlaces.stream()
+                .collect(Collectors.groupingBy(PlaceDetailDto::getDate));
+
+        List<String> sortedDates = groupedByDate.keySet().stream().sorted().toList();
+        List<DailyScheduleBlock> blocks = new ArrayList<>();
+
+        for (int i = 0; i < sortedDates.size(); i++) {
+            String date = sortedDates.get(i);
+            String day = (i + 1) + "일차";
+            List<PlaceDetailDto> dayPlaces = groupedByDate.get(date);
+
+            int total = dayPlaces.stream()
+                    .map(PlaceDetailDto::getEstimatedCost)
+                    .filter(Objects::nonNull)
+                    .mapToInt(Integer::intValue)
+                    .sum();
+
+            List<PlaceResponse> placeResponses = dayPlaces.stream()
+                    .map(PlaceResponse::from)
+                    .toList();
+
+            blocks.add(new DailyScheduleBlock(day, date, total, placeResponses));
+        }
+
+        return new FullScheduleResDto(null, null, null, blocks); // title, startDate, endDate는 null로 처리
     }
 
     private PlaceDetailDto resolveNewPlace(String rawInputPlaceName) throws Exception {
@@ -59,17 +84,19 @@ public class ScheduleEditService {
         String gptResponse = openAiClient.callGpt(prompt);
         PlaceReplaceResponse parsed = objectMapper.readValue(gptResponse, PlaceReplaceResponse.class);
 
-        KakaoPlaceDto kakao = kakaoMapClient.searchPlaceByKeyword(parsed.getSearchKeyword());
+        KakaoPlaceDto kakao = kakaoMapClient.searchPlace(parsed.getSearchKeyword());
         if (kakao == null) {
             throw new IllegalArgumentException("\u274C 장소를 찾을 수 없습니다: " + parsed.getSearchKeyword());
         }
 
-        PlaceDetailDto place = new PlaceDetailDto();
-        place.setName(parsed.getName());
-        place.setType(parsed.getType());
-        place.setAddress(kakao.getAddress() != null ? kakao.getAddress() : "주소 정보 없음");
-        place.setLat(kakao.getLatitude());
-        place.setLng(kakao.getLongitude());
+        PlaceDetailDto place = PlaceDetailDto.builder()
+                .name(parsed.getName())
+                .type(parsed.getType())
+                .address(kakao.getAddress() != null ? kakao.getAddress() : "주소 정보 없음")
+                .lat(kakao.getLatitude())
+                .lng(kakao.getLongitude())
+                .build();
+
 
         String descPrompt = gptPlaceDescriptionPromptBuilder.build(List.of(parsed.getName()));
         String descResponse = openAiClient.callGpt(descPrompt);

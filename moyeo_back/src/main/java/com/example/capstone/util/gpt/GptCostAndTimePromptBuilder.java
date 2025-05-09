@@ -2,7 +2,7 @@ package com.example.capstone.util.gpt;
 
 import com.example.capstone.plan.dto.common.FromPreviousDto;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
-import com.example.capstone.plan.dto.response.ScheduleDetailFullResponse.PlaceResponse;
+import com.example.capstone.plan.dto.response.FullScheduleResDto.PlaceResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
