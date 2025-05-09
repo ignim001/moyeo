@@ -1,14 +1,15 @@
+// ✅ 최종 리팩토링된 ScheduleService.java
 package com.example.capstone.plan.service;
-
 
 import com.example.capstone.plan.dto.common.FromPreviousDto;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
-import com.example.capstone.plan.dto.request.SaveScheduleRequest;
-import com.example.capstone.plan.dto.request.TravelPlanRequest;
-import com.example.capstone.plan.dto.response.DaySummaryResponse;
-import com.example.capstone.plan.dto.response.SaveScheduleResponse;
-import com.example.capstone.plan.dto.response.ScheduleDetailFullResponse;
-import com.example.capstone.plan.dto.response.ScheduleSimpleResponse;
+import com.example.capstone.plan.dto.request.ScheduleSaveReqDto;
+import com.example.capstone.plan.dto.request.ScheduleCreateReqDto;
+import com.example.capstone.plan.dto.response.ScheduleSaveResDto;
+import com.example.capstone.plan.dto.response.FullScheduleResDto;
+import com.example.capstone.plan.dto.response.FullScheduleResDto.PlaceResponse;
+import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
+import com.example.capstone.plan.dto.response.SimpleScheduleResDto;
 import com.example.capstone.plan.entity.Day;
 import com.example.capstone.plan.entity.FromPrevious;
 import com.example.capstone.plan.entity.Place;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,36 +45,53 @@ public class ScheduleService {
     private final DayRepository dayRepository;
     private final PlaceRepository placeRepository;
 
-    // ✅ 전체 일정 생성 흐름 (일정 + 설명 + 예산 + 이동시간)
-    public ScheduleDetailFullResponse generateFullSchedule(TravelPlanRequest request) throws Exception {
-        // 1. 일정 생성 프롬프트 → GPT 호출
+    public FullScheduleResDto generateFullSchedule(ScheduleCreateReqDto request) throws Exception {
         String schedulePrompt = structurePromptBuilder.build(request);
         String gptResponse = openAiClient.callGpt(schedulePrompt);
 
-        // 2. 정제된 장소 리스트 추출
         List<PlaceDetailDto> places = scheduleRefinerService.getRefinedPlacesFromPrompt(gptResponse);
 
-
-        // 3. 각 장소 한줄 설명 생성
         List<String> placeNames = places.stream().map(PlaceDetailDto::getName).toList();
         String descPrompt = descriptionPromptBuilder.build(placeNames);
         String descResponse = openAiClient.callGpt(descPrompt);
         var descriptionMap = parseDescriptionMap(descResponse);
-
         for (PlaceDetailDto place : places) {
             String desc = descriptionMap.get(place.getName());
             if (desc != null) place.setDescription(desc);
         }
 
-        // 4. 예산/이동시간 추정 요청
         String costPrompt = costAndTimePromptBuilder.build(places);
         String costResponse = openAiClient.callGpt(costPrompt);
-        return new ScheduleDetailFullResponse(costAndTimePromptBuilder.parseGptResponse(costResponse, places));
+        List<PlaceResponse> responses = costAndTimePromptBuilder.parseGptResponse(costResponse, places);
+        List<PlaceDetailDto> enrichedPlaces = responses.stream().map(PlaceResponse::toDto).toList();
+
+        Map<String, List<PlaceDetailDto>> groupedByDate = enrichedPlaces.stream()
+                .collect(Collectors.groupingBy(PlaceDetailDto::getDate));
+
+        List<String> sortedDates = groupedByDate.keySet().stream().sorted().toList();
+        List<FullScheduleResDto.DailyScheduleBlock> blocks = new ArrayList<>();
+
+        for (int i = 0; i < sortedDates.size(); i++) {
+            String date = sortedDates.get(i);
+            String day = (i + 1) + "일차";
+            List<PlaceDetailDto> dayPlaces = groupedByDate.get(date);
+
+            int total = dayPlaces.stream().map(PlaceDetailDto::getEstimatedCost).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
+            List<PlaceResponse> placeResponses = dayPlaces.stream().map(PlaceResponse::from).toList();
+
+            blocks.add(new FullScheduleResDto.DailyScheduleBlock(day, date, total, placeResponses));
+        }
+
+        String destination = request.getDestination().name();
+        long nights = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
+        String title = destination + " " + nights + "박 " + (nights + 1) + "일 여행";
+
+        return new FullScheduleResDto(title, request.getStartDate(), request.getEndDate(), blocks);
     }
 
     private Map<String, String> parseDescriptionMap(String gptResponse) {
-        Map<String, String> map = new java.util.LinkedHashMap<>();
-        try (java.util.Scanner scanner = new java.util.Scanner(gptResponse)) {
+        Map<String, String> map = new LinkedHashMap<>();
+        try (Scanner scanner = new Scanner(gptResponse)) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine().trim();
                 if (line.startsWith("-")) {
@@ -87,30 +106,8 @@ public class ScheduleService {
         return map;
     }
 
-    public List<DaySummaryResponse> createDaySummaries(Map<String, List<PlaceDetailDto>> groupedByDate) {
-        List<DaySummaryResponse> summaries = new java.util.ArrayList<>();
-
-        for (Map.Entry<String, List<PlaceDetailDto>> entry : groupedByDate.entrySet()) {
-            String date = entry.getKey();
-            List<PlaceDetailDto> places = entry.getValue();
-
-            int totalEstimatedCost = places.stream()
-                    .map(PlaceDetailDto::getEstimatedCost)
-                    .filter(cost -> cost != null)
-                    .mapToInt(Integer::intValue)
-                    .sum();
-
-            DaySummaryResponse summary = new DaySummaryResponse(date, places, totalEstimatedCost);
-            summaries.add(summary);
-        }
-
-        return summaries;
-    }
-
     @Transactional
-    public SaveScheduleResponse saveSchedule(SaveScheduleRequest request) {
-
-        // 1. Schedule 저장
+    public ScheduleSaveResDto saveSchedule(ScheduleSaveReqDto request) {
         Schedule schedule = Schedule.builder()
                 .userId(request.getUserId())
                 .title(request.getTitle())
@@ -119,17 +116,13 @@ public class ScheduleService {
                 .build();
         scheduleRepository.save(schedule);
 
-        // 2. Day 저장
-        for (SaveScheduleRequest.DayRequest dayRequest : request.getDays()) {
-            Day day = Day.builder()
-                    .schedule(schedule) // ✅ Schedule 엔티티 자체를 참조
-                    .dayNumber(dayRequest.getDayNumber())
-                    .build();
-
+        for (ScheduleSaveReqDto.DayRequest dayRequest : request.getDays()) {
+            Day day = Day.builder().schedule(schedule).build();
             dayRepository.save(day);
 
-            // 3. Place 저장
-            for (SaveScheduleRequest.PlaceRequest placeRequest : dayRequest.getPlaces()) {
+            List<ScheduleSaveReqDto.PlaceRequest> placeRequests = dayRequest.getPlaces();
+            for (int i = 0; i < placeRequests.size(); i++) {
+                ScheduleSaveReqDto.PlaceRequest placeRequest = placeRequests.get(i);
                 Place place = Place.builder()
                         .day(day)
                         .name(placeRequest.getName())
@@ -140,16 +133,16 @@ public class ScheduleService {
                         .description(placeRequest.getDescription())
                         .estimatedCost(placeRequest.getEstimatedCost())
                         .gptOriginalName(placeRequest.getGptOriginalName())
-                        .placeOrder(placeRequest.getPlaceOrder())
+                        .placeOrder(i)
                         .fromPrevious(Optional.ofNullable(placeRequest.getFromPrevious())
-                        .map(dto -> new FromPrevious(dto.getWalk(), dto.getPublicTransport(), dto.getCar()))
-                        .orElse(null))
+                                .map(dto -> new FromPrevious(dto.getWalk(), dto.getPublicTransport(), dto.getCar()))
+                                .orElse(null))
                         .build();
                 placeRepository.save(place);
             }
         }
 
-        return new SaveScheduleResponse(schedule.getId());
+        return new ScheduleSaveResDto(schedule.getId());
     }
 
     public List<PlaceDetailDto> getPlacesFromDatabase(Long scheduleId) {
@@ -169,22 +162,53 @@ public class ScheduleService {
                 .toList();
     }
 
-    public List<ScheduleSimpleResponse> getSimpleScheduleList(Long userId) {
-        List<Schedule> schedules = scheduleRepository.findByUserId(userId);
+    public FullScheduleResDto convertToBlockStructure(List<PlaceDetailDto> places, Schedule schedule) {
+        Map<String, List<PlaceDetailDto>> groupedByDate = places.stream()
+                .collect(Collectors.groupingBy(PlaceDetailDto::getDate));
 
+        List<String> sortedDates = groupedByDate.keySet().stream().sorted().toList();
+        List<DailyScheduleBlock> blocks = new ArrayList<>();
+
+        for (int i = 0; i < sortedDates.size(); i++) {
+            String date = sortedDates.get(i);
+            String day = (i + 1) + "일차";
+            List<PlaceDetailDto> dayPlaces = groupedByDate.get(date);
+
+            int total = dayPlaces.stream()
+                    .map(PlaceDetailDto::getEstimatedCost)
+                    .filter(Objects::nonNull)
+                    .mapToInt(Integer::intValue)
+                    .sum();
+
+            List<PlaceResponse> placeResponses = dayPlaces.stream()
+                    .map(PlaceResponse::from)
+                    .toList();
+
+            blocks.add(new DailyScheduleBlock(day, date, total, placeResponses));
+        }
+
+        return new FullScheduleResDto(
+                schedule.getTitle(),
+                schedule.getStartDate(),
+                schedule.getEndDate(),
+                blocks
+        );
+    }
+    public Schedule getScheduleById(Long scheduleId) {
+        return scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException(" 해당 ID의 일정이 없습니다: " + scheduleId));
+    }
+
+    public List<SimpleScheduleResDto> getSimpleScheduleList(Long userId) {
+        List<Schedule> schedules = scheduleRepository.findByUserId(userId);
         return schedules.stream()
-                .map(schedule -> {
-                    int ddayValue = calculateDDay(schedule.getStartDate());
-                    String ddayString = formatDday(ddayValue);
-                    return new ScheduleSimpleResponse(
-                            schedule.getId(),
-                            schedule.getTitle(),
-                            schedule.getStartDate(),
-                            schedule.getEndDate(),
-                            ddayString
-                    );
-                })
-                .toList();
+                .map(schedule -> new SimpleScheduleResDto(
+                        schedule.getId(),
+                        schedule.getTitle(),
+                        schedule.getStartDate(),
+                        schedule.getEndDate(),
+                        formatDday(calculateDDay(schedule.getStartDate()))
+                )).toList();
     }
 
     private int calculateDDay(LocalDate startDate) {
@@ -195,5 +219,4 @@ public class ScheduleService {
         if (d == 0) return "D-Day";
         return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
     }
-
 }

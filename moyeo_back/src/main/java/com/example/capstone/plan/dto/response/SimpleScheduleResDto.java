@@ -1,12 +1,14 @@
 package com.example.capstone.plan.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
+
 import java.time.LocalDate;
 
 @Data
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class ScheduleSimpleResponse {
+public class SimpleScheduleResDto {
     private Long id;
     private String title;
     private LocalDate startDate;

@@ -1,40 +1,35 @@
 package com.example.capstone.plan.dto.request;
 
-
 import com.example.capstone.plan.entity.FromPrevious;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class SaveScheduleRequest {
+@Data
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class ScheduleSaveReqDto {
 
     private Long userId;
-
     private String title;
-
     private LocalDate startDate;
-
     private LocalDate endDate;
-
     private List<DayRequest> days;
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    @AllArgsConstructor
     public static class DayRequest {
-        private Integer dayNumber;
         private List<PlaceRequest> places;
     }
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    @AllArgsConstructor
     public static class PlaceRequest {
         private String name;
         private String type;

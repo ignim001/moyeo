@@ -1,13 +1,10 @@
 package com.example.capstone.plan.dto.common;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Builder
 @Data
-@NoArgsConstructor
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class PlaceDetailDto {
     private String name;
@@ -19,4 +16,7 @@ public class PlaceDetailDto {
     private Integer estimatedCost;
     private FromPreviousDto fromPrevious;
     private String gptOriginalName;
+    private String date;
+    private String day;
+
 }

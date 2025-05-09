@@ -1,6 +1,10 @@
 package com.example.capstone.util.gpt;
 
-import com.example.capstone.plan.dto.request.TravelPlanRequest;
+import com.example.capstone.plan.dto.request.ScheduleCreateReqDto;
+import com.example.capstone.plan.entity.City;
+import com.example.capstone.plan.entity.Mbti;
+import com.example.capstone.plan.entity.PeopleGroup;
+import com.example.capstone.plan.entity.TravelStyle;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
@@ -8,11 +12,16 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class GptScheduleStructurePromptBuilder {
 
-    public String build(TravelPlanRequest request) {
+    public String build(ScheduleCreateReqDto request) {
         StringBuilder sb = new StringBuilder();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
         String formattedStart = request.getStartDate().format(formatter);
         String formattedEnd = request.getEndDate().format(formatter);
+
+        String destinationText = (request.getDestination() != City.NONE)
+                ? request.getDestination().getDisplayName()
+                : "국내";
+
 
         sb.append(String.format("%s부터 %s까지 %s로 여행을 떠날 예정이야.\n\n",
                 formattedStart,
@@ -55,18 +64,19 @@ public class GptScheduleStructurePromptBuilder {
   - **숙소는 가능한 한 그날 마지막 관광지에서 가까운 지역 기반 숙소로 작성해줘**
 """)));
 
-        if (request.getMbti() != null) {
+        if (request.getMbti() != Mbti.NONE) {
             sb.append("- MBTI: ").append(request.getMbti()).append("\n");
         }
-        if (request.getTravelStyle() != null) {
+        if (request.getTravelStyle() != TravelStyle.NONE) {
             sb.append("- 여행 성향: ").append(request.getTravelStyle()).append("\n");
         }
-        if (request.getPeopleGroup() != null) {
+        if (request.getPeopleGroup() != PeopleGroup.NONE) {
             sb.append("- 여행 인원: ").append(request.getPeopleGroup()).append("명\n");
         }
         if (request.getBudget() != null) {
             sb.append("- 예산: ").append(request.getBudget()).append("원\n");
         }
+
 
         sb.append("""
 
@@ -82,10 +92,10 @@ public class GptScheduleStructurePromptBuilder {
 - name: 사용자 친화 표현 (예: "경복궁 산책")
 - location: {
     name: KakaoMap 검색 가능한 장소명 (띄어쓰기 제거, 예: "경복궁", "남산케이블카"),
-    lat: null,
-    lng: null
-  }
-
+                    lat: null,
+                    lng: null
+                  }
+                
 응답 형식:
 - 반드시 JSON으로 반환. 다른 문장이나 설명은 절대 추가하지 마.
 - 백틱(```) 코드블럭이나 마크다운 양식은 사용하지 마.

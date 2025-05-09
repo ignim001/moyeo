@@ -17,8 +17,6 @@ public class Day {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer dayNumber;  // 몇 번째 날
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id")
     private Schedule schedule;  // ✅ 부모 Schedule

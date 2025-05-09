@@ -1,11 +1,10 @@
 package com.example.capstone.plan.dto.common;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
-@NoArgsConstructor
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class GptPlaceDto {
     private String name;
@@ -13,10 +12,11 @@ public class GptPlaceDto {
     private Location location;
 
     @Data
-    @NoArgsConstructor
+    @Builder
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor
     public static class Location {
-        private String name; // ← 이게 location.name (정제용)
+        private String name;  // GPT 응답상 location.name (ex: 서울역)
         private Double lat;
         private Double lng;
     }

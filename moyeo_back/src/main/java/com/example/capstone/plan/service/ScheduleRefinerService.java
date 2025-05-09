@@ -35,52 +35,54 @@ public class ScheduleRefinerService {
      */
     public List<PlaceDetailDto> getRefinedPlacesFromPrompt(String gptJson) {
         List<GptPlaceDto> gptPlaces = extractPlacesFromGptJson(gptJson);
-
         List<PlaceDetailDto> refinedPlaces = new ArrayList<>();
+
         for (GptPlaceDto gptPlace : gptPlaces) {
-            String gptName = gptPlace.getName(); // ✅ GPT 원본 이름 저장
-            System.out.println("✅ GPT 원본 이름: " + gptName); // ✅ 여기에 추가
+            String gptName = gptPlace.getName();
+
             String locationName = gptPlace.getLocation() != null ? gptPlace.getLocation().getName() : null;
             String type = normalizeType(gptPlace.getType());
             String categoryCode = mapToCategoryCode(type);
 
-            PlaceDetailDto dto = new PlaceDetailDto();
-            dto.setGptOriginalName(gptName);
-
+            // 관광지 또는 액티비티 처리
             if ("관광지".equals(type) || "액티비티".equals(type)) {
                 Map<String, Object> location = getAutoLocation(locationName != null ? locationName : gptName);
                 if (location != null) {
-
-                    dto.setName((String) location.get("name")); // ✅ 최종 확정된 장소 이름
-                    dto.setType(type);
-                    dto.setAddress((String) location.get("name"));
-                    dto.setLat((Double) location.get("lat"));
-                    dto.setLng((Double) location.get("lng"));
-                    dto.setDescription(null);
-                    dto.setEstimatedCost(null);
-                    dto.setFromPrevious(null);
-
-                    dto.setGptOriginalName(gptName); // ✅ 여기 추가 (GPT가 초기에 줬던 이름)
+                    PlaceDetailDto dto = PlaceDetailDto.builder()
+                            .name((String) location.get("name"))
+                            .type(type)
+                            .address((String) location.get("name"))
+                            .lat((Double) location.get("lat"))
+                            .lng((Double) location.get("lng"))
+                            .description(null)
+                            .estimatedCost(null)
+                            .fromPrevious(null)
+                            .gptOriginalName(gptName)
+                            .date(null)
+                            .day(null)
+                            .build();
 
                     refinedPlaces.add(dto);
                 }
             }
 
-            // 식사/숙소는 카카오맵 category 검색
+            // 식사 또는 숙소 처리
             else if ("식사".equals(type) || "숙소".equals(type)) {
                 KakaoPlaceDto place = kakaoMapClient.searchPlaceFromGpt(gptName, null, categoryCode);
                 if (place != null) {
-
-                    dto.setName(place.getPlaceName());
-                    dto.setType(type);
-                    dto.setAddress(place.getAddress());
-                    dto.setLat(place.getLatitude());
-                    dto.setLng(place.getLongitude());
-                    dto.setDescription(null);
-                    dto.setEstimatedCost(null);
-                    dto.setFromPrevious(null);
-
-                    dto.setGptOriginalName(gptName); // ✅ 여기 추가 (GPT가 초기에 줬던 이름)
+                    PlaceDetailDto dto = PlaceDetailDto.builder()
+                            .name(place.getPlaceName())
+                            .type(type)
+                            .address(place.getAddress())
+                            .lat(place.getLatitude())
+                            .lng(place.getLongitude())
+                            .description(null)
+                            .estimatedCost(null)
+                            .fromPrevious(null)
+                            .gptOriginalName(gptName)
+                            .date(null)
+                            .day(null)
+                            .build();
 
                     refinedPlaces.add(dto);
                 }
@@ -89,6 +91,7 @@ public class ScheduleRefinerService {
 
         return refinedPlaces;
     }
+
 
     private List<GptPlaceDto> extractPlacesFromGptJson(String gptJson) {
         List<GptPlaceDto> result = new ArrayList<>();
@@ -107,11 +110,13 @@ public class ScheduleRefinerService {
 
                                 GptPlaceDto.Location location = null;
                                 if (place.has("location") && place.get("location").has("name")) {
-                                    location = new GptPlaceDto.Location();
-                                    location.setName(place.get("location").get("name").asText());
-                                    location.setLat(place.get("location").has("lat") ? place.get("location").get("lat").asDouble() : null);
-                                    location.setLng(place.get("location").has("lng") ? place.get("location").get("lng").asDouble() : null);
+                                    location = GptPlaceDto.Location.builder()
+                                            .name(place.get("location").get("name").asText())
+                                            .lat(place.get("location").has("lat") ? place.get("location").get("lat").asDouble() : null)
+                                            .lng(place.get("location").has("lng") ? place.get("location").get("lng").asDouble() : null)
+                                            .build();
                                 }
+
 
                                 result.add(new GptPlaceDto(name, type, location));
                             }
@@ -194,19 +199,23 @@ public class ScheduleRefinerService {
                     .toList();
         }
 
-        private PlaceDetailDto toDto(Place place) {
-            PlaceDetailDto dto = new PlaceDetailDto();
-            dto.setName(place.getName());
-            dto.setType(place.getType());
-            dto.setAddress(place.getAddress());
-            dto.setLat(place.getLat());
-            dto.setLng(place.getLng());
-            dto.setDescription(place.getDescription());
-            dto.setEstimatedCost(place.getEstimatedCost());
-            dto.setGptOriginalName(place.getGptOriginalName());
-            return dto;
-        }
+    private PlaceDetailDto toDto(Place place) {
+        return PlaceDetailDto.builder()
+                .name(place.getName())
+                .type(place.getType())
+                .address(place.getAddress())
+                .lat(place.getLat())
+                .lng(place.getLng())
+                .description(place.getDescription())
+                .estimatedCost(place.getEstimatedCost())
+                .gptOriginalName(place.getGptOriginalName())
+                .fromPrevious(null) // 필요시 추가
+                .date(null)         // 필요시 추가
+                .day(null)          // 필요시 추가
+                .build();
     }
+
+}
 
 
 

@@ -1,12 +1,11 @@
 package com.example.capstone.plan.dto.common;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@NoArgsConstructor
 public class KakaoPlaceDto {
     private String placeName;
     private double latitude;
