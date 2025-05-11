@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -43,14 +44,33 @@ public class ScheduleEditService {
                 }
                 case "delete" -> currentSchedule.remove(action.getIndex());
                 case "reorder" -> currentSchedule = reorderList(currentSchedule, action.getFrom(), action.getTo());
-                default -> throw new IllegalArgumentException("알 수 없는 액션 타입: " + action.getAction());
+                default -> throw new IllegalArgumentException("\u274C 알 수 없는 액션 타입: " + action.getAction());
             }
         }
 
         String costPrompt = costAndTimePromptBuilder.build(currentSchedule);
         String gptResponse = openAiClient.callGpt(costPrompt);
         List<PlaceResponse> responses = costAndTimePromptBuilder.parseGptResponse(gptResponse, currentSchedule);
-        List<PlaceDetailDto> enrichedPlaces = responses.stream().map(PlaceResponse::toDto).toList();
+
+        List<PlaceDetailDto> enrichedPlaces = new ArrayList<>();
+        for (int i = 0; i < currentSchedule.size(); i++) {
+            PlaceDetailDto base = currentSchedule.get(i);
+            PlaceResponse enriched = responses.get(i);
+
+            PlaceDetailDto result = PlaceDetailDto.builder()
+                    .name(base.getName())
+                    .type(base.getType())
+                    .date(base.getDate())
+                    .address(base.getAddress())
+                    .lat(base.getLat())
+                    .lng(base.getLng())
+                    .description(enriched.getDescription())
+                    .estimatedCost(enriched.getEstimatedCost())
+                    .fromPrevious(enriched.getFromPrevious())
+                    .build();
+
+            enrichedPlaces.add(result);
+        }
 
         List<DailyScheduleBlock> blocks = new ArrayList<>();
         int dayIndex = 0;
@@ -59,11 +79,22 @@ public class ScheduleEditService {
             List<PlaceDetailDto> subList = enrichedPlaces.subList(i, end);
             int total = subList.stream().map(PlaceDetailDto::getEstimatedCost).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
             List<PlaceResponse> placeResponses = subList.stream().map(PlaceResponse::from).toList();
-            blocks.add(new DailyScheduleBlock((dayIndex + 1) + "일차", LocalDate.now().plusDays(dayIndex).toString(), total, placeResponses));
+            blocks.add(new DailyScheduleBlock((dayIndex + 1) + "\uC77C\uCC28", LocalDate.now().plusDays(dayIndex).toString(), total, placeResponses));
             dayIndex++;
         }
 
-        return new FullScheduleResDto(null, null, null, blocks); // title, startDate, endDate는 null로 처리
+        List<LocalDate> dates = request.getOriginalSchedule().stream()
+                .map(p -> LocalDate.parse(p.getDate()))
+                .sorted()
+                .toList();
+
+        LocalDate startDate = dates.get(0);
+        LocalDate endDate = dates.get(dates.size() - 1);
+        String destination = request.getOriginalSchedule().get(0).getCity();
+        int tripDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        String title = destination + " " + tripDays + "\uC77C \uC5EC\uD589";
+
+        return new FullScheduleResDto(title, startDate, endDate, blocks);
     }
 
     private PlaceDetailDto resolveNewPlace(String rawInputPlaceName) throws Exception {
