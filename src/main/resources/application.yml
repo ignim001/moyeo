@@ -1,27 +1,27 @@
 spring:
   profiles:
-    active: local
+    active: local  # local 또는 prod 선택
 
   security:
     oauth2:
       client:
         registration:
           kakao:
-            client-id: dummy
+            client-id: ${KAKAO_SECRET_KEY}
             client-secret:
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+            redirect-uri: "${BASE_URL}/login/oauth2/code/kakao"
             scope:
               - profile_nickname
               - account_email
             client-name: Kakao
           google:
-            client-id: dummy
-            client-secret: dummy
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+            redirect-uri: "${BASE_URL}/login/oauth2/code/google"
             scope:
               - profile
               - email
@@ -33,14 +33,15 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+# 공통 설정
 jwt:
-  secret: dummy
+  secret: ${JWT_SECRET}
   expirationMs: 1800000
   temp:
     expirationMs: 600000
 
 default:
-  image-url: dummy
+  image-url: ${DEFAULT_IMAGE}
 
 cloud:
   aws:
@@ -49,27 +50,19 @@ cloud:
     region:
       static: ap-northeast-2
     credentials:
-      access-key: dummy
-      secret-key: dummy
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
     s3:
-      bucket: dummy
+      bucket: moyeo-s3-1
 
 server:
   port: 8080
   address: 0.0.0.0
 
-openai:
-  api-key: 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
-
-
-kakao:
-  api:
-    key: 19833fa0c03fe54dcfa89fe0817defe0
-
-
 
 ---
 
+# local
 spring:
   config:
     activate:
@@ -88,3 +81,32 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+---
+
+# 배포
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:mysql://${RDS-ENDPOINT}:3306/${DB_NAME}?serverTimezone=Asia/Seoul&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  openai:
+    api-key: ${OPENAI_API_KEY}
+
+  kakao:
+    api:
+      key: ${KAKAO_API_KEY}
