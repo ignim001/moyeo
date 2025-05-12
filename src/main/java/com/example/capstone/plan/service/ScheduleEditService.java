@@ -3,19 +3,14 @@ package com.example.capstone.plan.service;
 import com.example.capstone.plan.dto.common.EditActionDto;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
 import com.example.capstone.plan.dto.request.ScheduleEditReqDto;
-import com.example.capstone.plan.dto.response.FullScheduleResDto;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.PlaceResponse;
 import com.example.capstone.plan.dto.common.KakaoPlaceDto;
-import com.example.capstone.util.gpt.GptAddPlacePromptBuilder;
-import com.example.capstone.util.gpt.GptCostAndTimePromptBuilder;
-import com.example.capstone.util.gpt.GptPlaceDescriptionPromptBuilder;
+import com.example.capstone.util.gpt.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -24,84 +19,84 @@ public class ScheduleEditService {
 
     private final GptCostAndTimePromptBuilder costAndTimePromptBuilder;
     private final GptAddPlacePromptBuilder gptAddPlacePromptBuilder;
+    private final GptUpdatePromptBuilder gptUpdatePromptBuilder;
     private final GptPlaceDescriptionPromptBuilder gptPlaceDescriptionPromptBuilder;
     private final KakaoMapClient kakaoMapClient;
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper;
 
-    public FullScheduleResDto applyEditRequest(ScheduleEditReqDto request) throws Exception {
-        List<PlaceDetailDto> currentSchedule = new ArrayList<>(request.getOriginalSchedule());
+    public DailyScheduleBlock applyEditToDay(ScheduleEditReqDto request) throws Exception {
+        DailyScheduleBlock originalDay = request.getDay();
+
+        List<PlaceDetailDto> flatList = new ArrayList<>();
+        if (originalDay.getPlaces() != null) {
+            for (PlaceResponse p : originalDay.getPlaces()) {
+                flatList.add(p.toDto());
+            }
+        }
 
         for (EditActionDto action : request.getEdits()) {
             switch (action.getAction()) {
                 case "add" -> {
-                    PlaceDetailDto added = resolveNewPlace(action.getRawInput());
-                    currentSchedule.add(action.getIndex(), added);
+                    PlaceDetailDto added = resolvePlaceDetailByAdd(action.getRawInput());
+                    flatList.add(action.getIndex(), added);
                 }
                 case "update" -> {
-                    PlaceDetailDto updated = resolveNewPlace(action.getRawInput());
-                    currentSchedule.set(action.getIndex(), updated);
+                    PlaceDetailDto original = flatList.get(action.getIndex());
+                    PlaceDetailDto updated = resolvePlaceDetailByUpdate(original.getName(), action.getRawInput(), original.getType());
+                    flatList.set(action.getIndex(), updated);
                 }
-                case "delete" -> currentSchedule.remove(action.getIndex());
-                case "reorder" -> currentSchedule = reorderList(currentSchedule, action.getFrom(), action.getTo());
+                case "delete" -> flatList.remove(action.getIndex());
+                case "reorder" -> flatList = reorderList(flatList, action.getFrom(), action.getTo());
                 default -> throw new IllegalArgumentException("\u274C 알 수 없는 액션 타입: " + action.getAction());
             }
         }
 
-        String costPrompt = costAndTimePromptBuilder.build(currentSchedule);
+        String costPrompt = costAndTimePromptBuilder.build(flatList);
         String gptResponse = openAiClient.callGpt(costPrompt);
-        List<PlaceResponse> responses = costAndTimePromptBuilder.parseGptResponse(gptResponse, currentSchedule);
+        List<PlaceResponse> enriched = costAndTimePromptBuilder.parseGptResponse(gptResponse, flatList);
 
-        List<PlaceDetailDto> enrichedPlaces = new ArrayList<>();
-        for (int i = 0; i < currentSchedule.size(); i++) {
-            PlaceDetailDto base = currentSchedule.get(i);
-            PlaceResponse enriched = responses.get(i);
-
-            PlaceDetailDto result = PlaceDetailDto.builder()
-                    .name(base.getName())
-                    .type(base.getType())
-                    .date(base.getDate())
-                    .address(base.getAddress())
-                    .lat(base.getLat())
-                    .lng(base.getLng())
-                    .description(enriched.getDescription())
-                    .estimatedCost(enriched.getEstimatedCost())
-                    .fromPrevious(enriched.getFromPrevious())
-                    .build();
-
-            enrichedPlaces.add(result);
+        List<PlaceResponse> updated = new ArrayList<>();
+        for (int i = 0; i < flatList.size(); i++) {
+            PlaceDetailDto base = flatList.get(i);
+            PlaceResponse enrich = enriched.get(i);
+            enrich.setName(base.getName());
+            enrich.setType(base.getType());
+            enrich.setLat(base.getLat());
+            enrich.setLng(base.getLng());
+            enrich.setAddress(base.getAddress());
+            enrich.setGptOriginalName(base.getGptOriginalName());
+            updated.add(enrich);
         }
 
-        List<DailyScheduleBlock> blocks = new ArrayList<>();
-        int dayIndex = 0;
-        for (int i = 0; i < enrichedPlaces.size(); i += 7) {
-            int end = Math.min(i + 7, enrichedPlaces.size());
-            List<PlaceDetailDto> subList = enrichedPlaces.subList(i, end);
-            int total = subList.stream().map(PlaceDetailDto::getEstimatedCost).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
-            List<PlaceResponse> placeResponses = subList.stream().map(PlaceResponse::from).toList();
-            blocks.add(new DailyScheduleBlock((dayIndex + 1) + "\uC77C\uCC28", LocalDate.now().plusDays(dayIndex).toString(), total, placeResponses));
-            dayIndex++;
-        }
+        int total = updated.stream()
+                .map(PlaceResponse::getEstimatedCost)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
 
-        List<LocalDate> dates = request.getOriginalSchedule().stream()
-                .map(p -> LocalDate.parse(p.getDate()))
-                .sorted()
-                .toList();
-
-        LocalDate startDate = dates.get(0);
-        LocalDate endDate = dates.get(dates.size() - 1);
-        String destination = request.getOriginalSchedule().get(0).getCity();
-        int tripDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
-        String title = destination + " " + tripDays + "\uC77C \uC5EC\uD589";
-
-        return new FullScheduleResDto(title, startDate, endDate, blocks);
+        return new DailyScheduleBlock(
+                originalDay.getDay(),
+                originalDay.getDate(),
+                total,
+                updated
+        );
     }
 
-    private PlaceDetailDto resolveNewPlace(String rawInputPlaceName) throws Exception {
-        String prompt = gptAddPlacePromptBuilder.build(rawInputPlaceName);
+    private PlaceDetailDto resolvePlaceDetailByAdd(String input) throws Exception {
+        String prompt = gptAddPlacePromptBuilder.build(input);
         String gptResponse = openAiClient.callGpt(prompt);
-        PlaceReplaceResponse parsed = objectMapper.readValue(gptResponse, PlaceReplaceResponse.class);
+        return parseAndEnrichPlace(gptResponse);
+    }
 
+    private PlaceDetailDto resolvePlaceDetailByUpdate(String originalName, String newName, String typeHint) throws Exception {
+        String prompt = gptUpdatePromptBuilder.build(originalName, newName, typeHint);
+        String gptResponse = openAiClient.callGpt(prompt);
+        return parseAndEnrichPlace(gptResponse);
+    }
+
+    private PlaceDetailDto parseAndEnrichPlace(String gptResponse) throws Exception {
+        PlaceReplaceResponse parsed = objectMapper.readValue(gptResponse, PlaceReplaceResponse.class);
         KakaoPlaceDto kakao = kakaoMapClient.searchPlace(parsed.getSearchKeyword());
         if (kakao == null) {
             throw new IllegalArgumentException("\u274C 장소를 찾을 수 없습니다: " + parsed.getSearchKeyword());
@@ -110,24 +105,29 @@ public class ScheduleEditService {
         PlaceDetailDto place = PlaceDetailDto.builder()
                 .name(parsed.getName())
                 .type(parsed.getType())
-                .address(kakao.getAddress() != null ? kakao.getAddress() : "주소 정보 없음")
+                .address(Optional.ofNullable(kakao.getAddress()).orElse("주소 정보 없음"))
                 .lat(kakao.getLatitude())
                 .lng(kakao.getLongitude())
+                .gptOriginalName(parsed.getName())
                 .build();
 
         String descPrompt = gptPlaceDescriptionPromptBuilder.build(List.of(parsed.getName()));
         String descResponse = openAiClient.callGpt(descPrompt);
         Map<String, String> descMap = parseDescriptionResponse(descResponse);
-        String desc = findBestMatchingDescription(descMap, parsed.getName());
-        place.setDescription(desc != null ? desc : "");
+        place.setDescription(Optional.ofNullable(findBestMatchingDescription(descMap, parsed.getName())).orElse(""));
+
+        String costPrompt = costAndTimePromptBuilder.build(List.of(place));
+        String costResponse = openAiClient.callGpt(costPrompt);
+        PlaceResponse costEnriched = costAndTimePromptBuilder.parseGptResponse(costResponse, List.of(place)).get(0);
+        place.setEstimatedCost(costEnriched.getEstimatedCost());
+        place.setFromPrevious(costEnriched.getFromPrevious());
 
         return place;
     }
 
     private Map<String, String> parseDescriptionResponse(String raw) {
         Map<String, String> map = new HashMap<>();
-        String[] lines = raw.split("\n");
-        for (String line : lines) {
+        for (String line : raw.split("\n")) {
             line = line.trim();
             if (line.startsWith("-") && line.contains(":")) {
                 String[] parts = line.substring(1).split(":", 2);
@@ -141,12 +141,11 @@ public class ScheduleEditService {
 
     private String findBestMatchingDescription(Map<String, String> descriptionMap, String targetName) {
         if (descriptionMap.containsKey(targetName)) return descriptionMap.get(targetName);
-        for (Map.Entry<String, String> entry : descriptionMap.entrySet()) {
-            if (targetName.contains(entry.getKey()) || entry.getKey().contains(targetName)) {
-                return entry.getValue();
-            }
-        }
-        return null;
+        return descriptionMap.entrySet().stream()
+                .filter(e -> targetName.contains(e.getKey()) || e.getKey().contains(targetName))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
     }
 
     private List<PlaceDetailDto> reorderList(List<PlaceDetailDto> list, int from, int to) {

@@ -2,6 +2,7 @@ package com.example.capstone.plan.controller;
 
 
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
+import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
 import com.example.capstone.plan.dto.request.ScheduleSaveReqDto;
 import com.example.capstone.plan.dto.request.ScheduleEditReqDto;
 import com.example.capstone.plan.dto.request.ScheduleCreateReqDto;
@@ -74,14 +75,15 @@ public class ScheduleController {
         }
     }
 
-    @Operation(summary = "일괄 편집", description = "추가, 수정, 삭제, 순서변경을 한번에 반영합니다.")
+    @Operation(summary = "일정 편집", description = "하루치 일정에 대해 추가, 수정, 삭제, 순서 변경을 한번에 반영합니다.")
     @PatchMapping("/edit")
-    public ResponseEntity<FullScheduleResDto> editSchedule(
+    public ResponseEntity<DailyScheduleBlock> editDaySchedule(
             @RequestBody ScheduleEditReqDto request
     ) throws Exception {
-        FullScheduleResDto result = scheduleEditService.applyEditRequest(request);
+        DailyScheduleBlock result = scheduleEditService.applyEditToDay(request);
         return ResponseEntity.ok(result);
     }
+
 
 
     @Operation(summary = "추천 일정 저장", description = "사용자가 확정한 여행 일정을 데이터베이스에 저장합니다.")
