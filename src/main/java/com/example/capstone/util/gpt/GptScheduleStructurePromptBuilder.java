@@ -33,7 +33,6 @@ public class GptScheduleStructurePromptBuilder {
         if (isDomestic) {
             sb.append("""
 - 목적지가 \"국내\"일 경우, 계절과 사용자 특성(MBTI, 여행 성향 등)에 어울리는 국내 도시(예: 전주, 여수, 속초, 부산 등)를 자유롭게 선택해서 추천해줘.
-- 서울로만 고정하지 말고, 다양한 지역을 제안해줘.
 """);
         }
         sb.append("""
@@ -61,7 +60,8 @@ public class GptScheduleStructurePromptBuilder {
   - location.name 필드에는 반드시 **KakaoMap에서 검색 가능한 실제 장소명**을 제공해줘.
     - 예: "남산케이블카", "동대문디자인플라자", "북촌한옥마을", "서울숲공원"
     - **띄어쓰기를 모두 제거**하고, 정확한 장소명을 넣어줘. (예: "망원한강공원", "홍익대학교정문")
-    - **location.name이 누락되거나 애매하면 안 돼! 반드시 KakaoMap에서 검색 가능한 장소명을 사용해야 해**
+    - **location.name이 누락되거나 애매하면 안 돼!** 
+    - KakaoMap API로 검색해서 정제할 예정이야. **검색 실패 시 전체 일정이 잘못될 수 있어**.
   - name과 location.name은 달라도 괜찮아. name은 자유롭게, location.name은 정확하게.
 
                 - 식사(type: 아침, 점심, 저녁)나 숙소(type: 숙소)인 경우:
@@ -97,9 +97,8 @@ public class GptScheduleStructurePromptBuilder {
 - 각 일정 항목에는 간단한 설명(description)도 함께 포함해줘
 - 위도/경도는 절대 포함하지 마 (lat/lng는 null로 넣고, 서버에서 보정할 거야)
 - 최근 리뷰가 있는 장소만 사용해줘
-- 누락되거나 비어 있으면 안 돼.
-                
-
+- 반드시 위에서 제공한 장소 수와 동일한 개수의 JSON 배열을 생성해. 하나라도 누락되면 안 돼.
+ 
 관광지 또는 액티비티(type: 관광지, 액티비티)인 경우 반드시 아래 location 정보를 포함해야 해:
 - name: 사용자 친화 표현 (예: "경복궁 산책")
 - location: {
@@ -117,33 +116,22 @@ public class GptScheduleStructurePromptBuilder {
 
 예시:
 {
-  "itinerary": [
-    {
-      "date": "2025-05-15",
-      "travelSchedule": [
-        { "type": "아침", "name": "이태원 브런치 카페", "description": "산뜻하게 하루를 여는 브런치 한 끼" },
-        { "type": "관광지", "name": "경복궁 산책", "location": { "name": "경복궁", "lat": null, "lng": null }, "description": "고궁의 고요함 속에서 여유로운 산책" },
-        { "type": "점심", "name": "종로 파스타 맛집", "description": "진한 풍미가 가득한 이탈리안 점심" },
-        { "type": "액티비티", "name": "북촌 한옥마을 투어", "location": { "name": "북촌한옥마을", "lat": null, "lng": null }, "description": "전통의 미를 느끼는 한옥 골목길 걷기" },
-        { "type": "저녁", "name": "홍대 이자카야", "description": "도심 속 조용한 일본식 저녁 한 잔" },
-        { "type": "관광지", "name": "남산 케이블카 야경", "location": { "name": "남산케이블카", "lat": null, "lng": null }, "description": "서울의 야경을 한눈에 담는 저녁 여행" },
-        { "type": "숙소", "name": "명동 호텔", "description": "서울 중심에서의 편안한 하루 마무리" }
-      ]
-    },
-    {
-      "date": "2025-05-16",
-      "travelSchedule": [
-        { "type": "아침", "name": "성수 브런치 카페", "description": "커피 한잔과 함께 여유롭게 시작하는 하루" },
-        { "type": "관광지", "name": "서울숲 산책", "location": { "name": "서울숲공원", "lat": null, "lng": null }, "description": "푸르른 자연 속 산책로를 따라 힐링" },
-        { "type": "점심", "name": "성수 파스타 맛집", "description": "트러플 향 가득한 파스타로 에너지 충전" },
-        { "type": "액티비티", "name": "한강 자전거 투어", "location": { "name": "망원한강공원", "lat": null, "lng": null }, "description": "강바람 맞으며 자전거로 둘러보는 한강변" },
-        { "type": "저녁", "name": "강남 이자카야", "description": "사케와 함께하는 여유로운 저녁" },
-        { "type": "관광지", "name": "청계천 야경 산책", "location": { "name": "청계천", "lat": null, "lng": null }, "description": "도심의 빛과 물소리가 어우러진 산책" },
-        { "type": "숙소", "name": "강남 호텔", "description": "강남 중심에서 조용한 밤 휴식" }
-      ]
-    }
-  ]
-}
+   "itinerary": [
+     {
+       "date": "2025-05-15",
+       "travelSchedule": [
+         { "type": "아침", "name": "이태원 브런치 카페", "description": null },
+         { "type": "관광지", "name": "경복궁 산책", "location": { "name": "경복궁", "lat": null, "lng": null }, "description": null },
+         { "type": "점심", "name": "종로 파스타 맛집", "description": null },
+         { "type": "액티비티", "name": "북촌 한옥마을 투어", "location": { "name": "북촌한옥마을", "lat": null, "lng": null }, "description": null },
+         { "type": "저녁", "name": "홍대 이자카야", "description": null },
+         { "type": "관광지", "name": "남산 케이블카 야경", "location": { "name": "남산케이블카", "lat": null, "lng": null }, "description": null },
+         { "type": "숙소", "name": "명동 호텔", "description": null }
+       ]
+     }
+   ]
+ }
+
 
                 
 """);

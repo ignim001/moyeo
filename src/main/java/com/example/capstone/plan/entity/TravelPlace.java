@@ -12,7 +12,6 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "travel_place")
 public class TravelPlace {
 
     @Id

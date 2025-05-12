@@ -1,4 +1,3 @@
-// ✅ 최종 리팩토링된 ScheduleService.java
 package com.example.capstone.plan.service;
 
 import com.example.capstone.plan.dto.common.FromPreviousDto;
@@ -17,6 +16,8 @@ import com.example.capstone.plan.entity.TravelSchedule;
 import com.example.capstone.plan.repository.DayRepository;
 import com.example.capstone.plan.repository.PlaceRepository;
 import com.example.capstone.plan.repository.ScheduleRepository;
+import com.example.capstone.user.entity.UserEntity;
+import com.example.capstone.user.repository.UserRepository;
 import com.example.capstone.util.gpt.GptCostAndTimePromptBuilder;
 import com.example.capstone.util.gpt.GptPlaceDescriptionPromptBuilder;
 import com.example.capstone.util.gpt.GptScheduleStructurePromptBuilder;
@@ -43,6 +44,7 @@ public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final DayRepository dayRepository;
     private final PlaceRepository placeRepository;
+    private final UserRepository userRepository;
 
     public FullScheduleResDto generateFullSchedule(ScheduleCreateReqDto request) throws Exception {
         String schedulePrompt = structurePromptBuilder.build(request);
@@ -112,8 +114,11 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleSaveResDto saveSchedule(ScheduleSaveReqDto request) {
+        UserEntity user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
         TravelSchedule travelSchedule = TravelSchedule.builder()
-                .userId(request.getUserId())
+                .user(user)
                 .title(request.getTitle())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())

@@ -38,13 +38,14 @@ public class WebSecurityConfig {
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**",
-                                "/swagger-ui/**",
-                                "/swagger-resources/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html"
-                                ).permitAll()
-                        .anyRequest().authenticated())
+//                        .requestMatchers("/auth/**",
+//                                "/swagger-ui/**",
+//                                "/swagger-resources/**",
+//                                "/v3/api-docs/**",
+//                                "/swagger-ui.html",
+//                                "/schedule/**"
+//                                ).permitAll()
+                        .anyRequest().permitAll())
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .authorizationEndpoint(endpoint -> endpoint.authorizationRequestResolver(

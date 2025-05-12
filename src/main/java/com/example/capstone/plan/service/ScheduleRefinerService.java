@@ -98,7 +98,9 @@ public class ScheduleRefinerService {
                     JsonNode dayPlan = itinerary.get(i);
                     String date = dayPlan.get("date").asText();
                     String day = (i + 1) + "일차";
-                    JsonNode schedule = dayPlan.get("schedule");
+                    JsonNode schedule = dayPlan.has("travelSchedule")
+                            ? dayPlan.get("travelSchedule")
+                            : dayPlan.get("schedule");
 
                     if (schedule != null && schedule.isArray()) {
                         for (JsonNode place : schedule) {
