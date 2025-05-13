@@ -29,7 +29,8 @@ public class TravelDay {
     @Column(name = "date")
     private String date;  // YYYY-MM-DD 형식 날짜
 
-    @Column(name = "day")
+    @Column(name = "day_label")
     private String day;  // 예: "1일차", "2일차"
 
 }
+
