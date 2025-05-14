@@ -1,27 +1,30 @@
 package com.example.capstone.util.chatbot;
 
+import com.example.capstone.plan.entity.City;
 import org.springframework.stereotype.Component;
 
 @Component
 public class HotelPromptBuilder {
 
-    public String build(String userQuestion) {
+    public String build(City city) {
         return String.format("""
-            당신은 대한민국 숙박 정보에 정통한 여행 숙소 전문가입니다.
+            너는 대한민국 숙소 전문가야.
 
-            사용자가 아래와 같은 질문을 했습니다:
-            "%s"
+            [%s] 지역에서 여행자에게 추천할만한 숙소 3곳을 아래 정보와 함께 알려줘.
 
-            이 질문은 '숙소 정보' 카테고리에 해당합니다.
-            사용자는 지역, 가격대(가성비/고급), 뷰(오션뷰/마운틴뷰), 위치, 편의시설 등 다양한 기준으로 숙소를 찾고자 할 수 있습니다.
+            각 숙소에 대해 JSON 형식으로 제공해줘:
 
-            아래 기준을 참고해 여행자에게 실제 도움이 되는 정보를 제공해주세요:
-            - 숙소명과 간단한 소개
-            - 가격대 및 위치 정보
-            - 특징적인 장점 (뷰, 조식, 수영장 등)
-            - 이용 팁 (조용한 지역, 교통 접근성, 혼자 여행 등)
+            - name: 숙소명
+            - priceRange: 가격대 (1박 기준, 예: 90,000원 ~ 120,000원)
+            - address: 주소
+            - phone: 연락처 (없으면 null)
+            - checkIn: 체크인 시간
+            - checkOut: 체크아웃 시간
 
-            정보는 간결하되, 숙소 선택에 실질적인 판단이 될 수 있도록 해주세요.
-            """, userQuestion);
+            조건:
+            - KakaoMap 기준 실제 숙소만 추천해야 함
+            - 출력은 JSON 배열로만 해줘, 설명 없이
+            - 장소 수는 정확히 3개
+        """, city.getDisplayName());
     }
 }

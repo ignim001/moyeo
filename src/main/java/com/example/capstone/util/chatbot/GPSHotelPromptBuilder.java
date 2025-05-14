@@ -4,25 +4,24 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GPSHotelPromptBuilder {
-
-    public String build(String userQuestion, double latitude, double longitude) {
+    public String build(double latitude, double longitude) {
         return String.format("""
-            당신은 대한민국 각 지역의 숙소 정보를 잘 아는 여행 숙소 전문가입니다.
+            너는 대한민국 숙소 추천 전문가야.
 
-            사용자가 현재 위치를 기준으로 다음과 같은 질문을 했습니다:
-            "%s"
+            사용자의 현재 위치는 위도 %.6f, 경도 %.6f야.
+            이 위치 근처에서 추천할만한 숙소 3곳을 아래 조건에 맞춰 알려줘.
 
-            사용자의 위치는 위도 %f, 경도 %f입니다.
-            이 질문은 '주변 숙소' 추천에 대한 것입니다.
-            사용자의 GPS 위치를 기반으로, 지금 이용할 수 있는 숙소를 추천해주세요.
+            각 숙소에 대해 아래 정보를 JSON 형식으로 제공해줘:
+            - name: 숙소명
+            - price: 1박 기준 가격대 (예: 45000원)
+            - location: 도로명 주소 또는 지번 주소
+            - contact: 연락처
+            - checkin_checkout: 체크인/체크아웃 시간
 
-            아래 기준을 참고해 구성해주세요:
-            - 숙소명과 간단한 소개 (호텔, 게스트하우스 등)
-            - 가격대 또는 이용 팁 (가성비, 고급, 혼자 여행 등)
-            - 도보 또는 차량 기준 거리 또는 소요 시간
-            - 후기, 편의시설, 뷰(오션뷰, 시티뷰 등) 등 특장점
-
-            광고처럼 느껴지는 표현은 피하고, 신뢰할 수 있는 숙소를 추천해주세요.
-            """, userQuestion, latitude, longitude);
+            조건:
+            - 장소는 KakaoMap에서 실제 존재하는 곳이어야 함
+            - 출력은 JSON 배열로만 해줘, 다른 설명이나 코드 블럭(예: ```json)은 포함하지 마.
+            - 장소 수는 정확히 3개
+        """, latitude, longitude);
     }
 }

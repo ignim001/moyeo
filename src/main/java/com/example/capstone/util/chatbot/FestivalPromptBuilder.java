@@ -1,27 +1,30 @@
 package com.example.capstone.util.chatbot;
 
+import com.example.capstone.plan.entity.City;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FestivalPromptBuilder {
 
-    public String build(String userQuestion) {
+    public String build(City city) {
         return String.format("""
-            당신은 대한민국 지역 축제와 문화 이벤트, 팝업스토어, 전시회 등에 대해 잘 아는 여행 문화 전문가입니다.
+            너는 지역 축제 정보를 잘 아는 여행 가이드야.
 
-            사용자가 아래와 같은 질문을 했습니다:
-            "%s"
+            [%s] 지역에서 진행되는 축제나 지역 이벤트 3개를 알려줘.
 
-            이 질문은 '축제/이벤트 정보' 카테고리에 해당합니다.
-            사용자는 특정 지역이나 날짜를 기준으로 즐길 수 있는 현지 행사, 문화 프로그램, 계절별 축제를 알고 싶어 할 수 있습니다.
+            각 축제에 대해 아래 정보를 JSON 형식으로 제공해줘:
 
-            아래 기준을 참고해 여행자 입장에서 실질적으로 도움이 되는 정보를 제공해주세요:
-            - 축제명 또는 이벤트명과 간단한 소개
-            - 개최 장소 및 일정 (예정일 포함 가능)
-            - 행사 내용 및 분위기 (체험형, 공연, 플리마켓, 팝업 등)
-            - 지역 음식/문화와 연결된 팁이 있다면 포함
+            - name: 축제명
+            - date: 개최 기간 (예: 2025.05.01 ~ 2025.05.07)
+            - location: 장소
+            - highlight: 주요 행사 내용
+            - fee: 입장료 여부 (예: 무료, 10000원)
 
-            너무 형식적인 소개는 피하고, 실제 참여하고 싶은 매력을 중심으로 요약해주세요.
-            """, userQuestion);
+            조건:
+            - 2025년 기준 다가오는 실제 축제를 우선으로 추천
+            - KakaoMap에서 장소 검색이 가능한 실제 장소에서 진행되는 행사만 추천
+            - 출력은 JSON 배열로만 해줘, 설명 없이
+            - 장소 수는 정확히 3개
+        """, city.getDisplayName());
     }
 }

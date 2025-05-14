@@ -1,11 +1,13 @@
 package com.example.capstone.chatbot.dto;
 
+import com.example.capstone.chatbot.entity.ChatCategory;
+import com.example.capstone.plan.entity.City;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class ChatBotReq {
-    private String category;   // 예: "관광지", "맛집", "숙소", "축제", "날씨"
-    private String userInput;  // 사용자의 자연어 질문
+    private City city;
+    private ChatCategory category;
 }
