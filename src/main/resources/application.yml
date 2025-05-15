@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: local  # local 또는 prod 선택
+    active: prod  # local 또는 prod 선택
 
   security:
     oauth2:

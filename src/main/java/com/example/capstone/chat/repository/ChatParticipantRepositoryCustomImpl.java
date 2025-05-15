@@ -35,7 +35,7 @@ public class ChatParticipantRepositoryCustomImpl implements ChatParticipantRepos
     @Override
     public List<ChatParticipant> findByUserOrderByChatRoomUpdatedTimeDesc(UserEntity user) {
         return queryFactory.selectFrom(chatParticipant)
-                .join(chatParticipant.chatRoom, chatRoom).fetchJoin()
+                .join(chatParticipant.chatRoom, chatRoom)
                 .where(chatParticipant.user.id.eq(user.getId()))
                 .orderBy(chatParticipant.chatRoom.updatedTime.desc())
                 .fetch();
