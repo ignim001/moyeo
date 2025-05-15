@@ -33,7 +33,8 @@ public class ScheduleController {
     private final ScheduleEditService scheduleEditService;
     private final ScheduleRefinerService scheduleRefinerService;
     private final ScheduleRebuildService scheduleRebuildService;
-    private final UserService userService;
+
+
 
 
 
@@ -59,7 +60,7 @@ public class ScheduleController {
     public ResponseEntity<List<SimpleScheduleResDto>> getScheduleList(
             @AuthenticationPrincipal CustomOAuth2User userDetails) {
         try {
-            Long userId = userService.getUserId(userDetails);
+            Long userId = userDetails.getUserId();
             List<SimpleScheduleResDto> response = scheduleService.getSimpleScheduleList(userId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -96,7 +97,7 @@ public class ScheduleController {
     public ResponseEntity<ScheduleSaveResDto> saveSchedule(
             @AuthenticationPrincipal CustomOAuth2User userDetails,
             @RequestBody ScheduleSaveReqDto request) {
-        Long userId = userService.getUserId(userDetails);
+        Long userId = userDetails.getUserId();
         ScheduleSaveResDto response = scheduleService.saveSchedule(request, userId);
         return ResponseEntity.ok(response);
     }
@@ -112,7 +113,7 @@ public class ScheduleController {
             return ResponseEntity.internalServerError().body(null);
         }
     }
-    @Operation(summary = "기존 일정을 제외한 일정 재생성", description = "create로 받은 일정에서 장소들을 제외하고 새로운 일정을 생성합니다.")
+    @Operation(summary = "전체 일정 리빌딩", description = "수정된 장소 리스트를 기반으로 하루 일정이 아닌 전체 일정을 리빌딩합니다.")
     @PostMapping("/rebuild")
     public ResponseEntity<FullScheduleResDto> rebuildSchedule(@RequestBody ScheduleRebuildReqDto request) {
         try {

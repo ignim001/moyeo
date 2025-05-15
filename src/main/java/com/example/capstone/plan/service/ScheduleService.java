@@ -246,25 +246,18 @@ public class ScheduleService {
     }
 
     public FullScheduleResDto regenerateSchedule(ScheduleRegenerateReqDto regenerateRequest) throws Exception {
-        // 1. ScheduleCreateReqDto와 FullScheduleResDto 받기
+        // 1. 파라미터 분리
         ScheduleCreateReqDto request = regenerateRequest.getRequest();
-        FullScheduleResDto originalSchedule = regenerateRequest.getOriginalSchedule();
+        List<String> excludePlaceNames = regenerateRequest.getExcludedNames();
 
-        // 2. 장소 이름 리스트 추출
-        List<String> excludePlaceNames = originalSchedule.getDays().stream()
-                .flatMap(day -> day.getPlaces().stream())
-                .map(FullScheduleResDto.PlaceResponse::getName)
-                .distinct()
-                .toList();
-
-        // 3. 프롬프트 생성 및 GPT 호출
+        // 2. GPT 프롬프트 생성 및 호출
         String prompt = gptRegeneratePromptBuilder.build(request, excludePlaceNames);
         String gptResponse = openAiClient.callGpt(prompt);
 
-        // 4. 장소 정제 및 DTO 생성
+        // 3. 장소 정제
         List<PlaceDetailDto> refinedPlaces = scheduleRefinerService.getRefinedPlacesFromPrompt(gptResponse);
 
-        // 5. 한줄 설명 생성
+        // 4. 한줄 설명 생성
         List<String> placeNames = refinedPlaces.stream().map(PlaceDetailDto::getName).toList();
         String descPrompt = descriptionPromptBuilder.build(placeNames);
         String descResponse = openAiClient.callGpt(descPrompt);
@@ -273,38 +266,43 @@ public class ScheduleService {
             place.setDescription(descriptionMap.getOrDefault(place.getName(), ""));
         }
 
-        // 6. 예산 및 이동시간 생성
+        // 5. 예산 및 이동시간 추정
         String costPrompt = costAndTimePromptBuilder.build(refinedPlaces);
         String costResponse = openAiClient.callGpt(costPrompt);
-        List<FullScheduleResDto.PlaceResponse> finalPlaces = costAndTimePromptBuilder.parseGptResponse(costResponse, refinedPlaces);
+        List<FullScheduleResDto.PlaceResponse> finalPlaces =
+                costAndTimePromptBuilder.parseGptResponse(costResponse, refinedPlaces);
 
-        // 7. 날짜 기준으로 블록 구조 변환
-        Map<String, List<FullScheduleResDto.PlaceResponse>> groupedByDate = new LinkedHashMap<>();
-        List<FullScheduleResDto.DailyScheduleBlock> originalDays = originalSchedule.getDays();
-        int index = 0;
-        for (FullScheduleResDto.DailyScheduleBlock day : originalDays) {
-            List<FullScheduleResDto.PlaceResponse> dayPlaces = finalPlaces.subList(index, index + day.getPlaces().size());
-            groupedByDate.put(day.getDate(), dayPlaces);
-            index += day.getPlaces().size();
-        }
-
-        List<FullScheduleResDto.DailyScheduleBlock> blocks = new ArrayList<>();
-        int dayIndex = 0;
-        for (Map.Entry<String, List<FullScheduleResDto.PlaceResponse>> entry : groupedByDate.entrySet()) {
-            String date = entry.getKey();
-            List<FullScheduleResDto.PlaceResponse> dayPlaces = entry.getValue();
-            int total = dayPlaces.stream()
-                    .mapToInt(p -> p.getEstimatedCost() != 0 ? p.getEstimatedCost() : 0)
-                    .sum();
-            blocks.add(new FullScheduleResDto.DailyScheduleBlock((++dayIndex) + "일차", date, total, dayPlaces));
-        }
-
-        // 8. 응답 객체 구성 및 반환
+        // 6. 일정 블록 구조로 재구성
         long nights = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
         long days = nights + 1;
 
-        String title = request.getDestination().getDisplayName() + " " + nights + "박 " + days + "일 여행";        return new FullScheduleResDto(title, request.getStartDate(), request.getEndDate(), blocks);
+        List<FullScheduleResDto.DailyScheduleBlock> blocks = new ArrayList<>();
+        int placesPerDay = finalPlaces.size() / (int) days;
+        int index = 0;
+
+        for (int i = 0; i < days; i++) {
+            String day = (i + 1) + "일차";
+            String date = request.getStartDate().plusDays(i).toString();
+
+            int remaining = finalPlaces.size() - index;
+            int currentDayCount = i == days - 1 ? remaining : placesPerDay;
+
+            List<FullScheduleResDto.PlaceResponse> dailyPlaces =
+                    finalPlaces.subList(index, index + currentDayCount);
+
+            int total = dailyPlaces.stream()
+                    .mapToInt(PlaceResponse::getEstimatedCost)
+                    .sum();
+
+            blocks.add(new FullScheduleResDto.DailyScheduleBlock(day, date, total, dailyPlaces));
+            index += currentDayCount;
+        }
+
+        // 7. 응답 생성
+        String title = request.getDestination().getDisplayName() + " " + nights + "박 " + days + "일 여행";
+        return new FullScheduleResDto(title, request.getStartDate(), request.getEndDate(), blocks);
     }
+
 
 
 

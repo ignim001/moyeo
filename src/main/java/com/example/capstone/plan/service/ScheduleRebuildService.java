@@ -3,7 +3,7 @@ package com.example.capstone.plan.service;
 import com.example.capstone.plan.dto.common.FromPreviousDto;
 import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import com.example.capstone.plan.dto.request.ScheduleRebuildReqDto;
-import com.example.capstone.plan.dto.request.ScheduleRebuildReqDto.DayNameOnlyBlock;
+import com.example.capstone.plan.dto.request.ScheduleRebuildReqDto.ScheduleNameBlock;
 import com.example.capstone.plan.dto.response.FullScheduleResDto;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.PlaceResponse;
@@ -27,7 +27,7 @@ public class ScheduleRebuildService {
     private final ObjectMapper objectMapper;
 
     public FullScheduleResDto rebuildFullSchedule(ScheduleRebuildReqDto request) throws Exception {
-        List<String> names = extractNames(request.getDays());
+        List<String> names = extractNames(request.getSchedule());
         String prompt = promptBuilder.build(names);
         String gptResponse = openAiClient.callGpt(prompt);
         List<PlaceResponse> rebuiltPlaces = parseGptResponse(gptResponse);
@@ -36,8 +36,8 @@ public class ScheduleRebuildService {
         int idx = 0;
         LocalDate currentDate = request.getStartDate();
 
-        for (int i = 0; i < request.getDays().size(); i++) {
-            DayNameOnlyBlock day = request.getDays().get(i);
+        for (int i = 0; i < request.getSchedule().size(); i++) {
+            ScheduleNameBlock day = request.getSchedule().get(i);
             List<PlaceResponse> rebuiltDayPlaces = new ArrayList<>();
             for (int j = 0; j < day.getNames().size(); j++) {
                 rebuiltDayPlaces.add(rebuiltPlaces.get(idx++));
@@ -45,7 +45,7 @@ public class ScheduleRebuildService {
             int total = rebuiltDayPlaces.stream().mapToInt(PlaceResponse::getEstimatedCost).sum();
 
             rebuiltDays.add(DailyScheduleBlock.builder()
-                    .day(day.getDay())
+                    .day(day.getDayLabel())
                     .date(currentDate.plusDays(i).toString())
                     .totalEstimatedCost(total)
                     .places(rebuiltDayPlaces)
@@ -60,9 +60,9 @@ public class ScheduleRebuildService {
                 .build();
     }
 
-    private List<String> extractNames(List<DayNameOnlyBlock> days) {
+    private List<String> extractNames(List<ScheduleNameBlock> days) {
         List<String> result = new ArrayList<>();
-        for (DayNameOnlyBlock day : days) {
+        for (ScheduleNameBlock day : days) {
             result.addAll(day.getNames());
         }
         return result;
@@ -77,18 +77,17 @@ public class ScheduleRebuildService {
 
         List<PlaceResponse> result = new ArrayList<>();
         for (JsonNode node : root) {
-            String name = node.path("name").asText(); //
-            String gptOriginalName = node.path("gptOriginalName").asText(); //
+            String name = node.path("name").asText();
+            String gptOriginalName = node.path("gptOriginalName").asText();
 
-            // KakaoMap 검색
             KakaoPlaceDto kakao = kakaoMapClient.searchPlace(name);
             if (kakao == null) {
                 throw new IllegalStateException("KakaoMap 검색 실패: " + name);
             }
 
             PlaceResponse place = PlaceResponse.builder()
-                    .name(name) //
-                    .gptOriginalName(gptOriginalName) //
+                    .name(name)
+                    .gptOriginalName(gptOriginalName)
                     .type(node.path("type").asText())
                     .estimatedCost(node.path("estimatedCost").asInt())
                     .description(node.path("description").asText())
@@ -106,5 +105,4 @@ public class ScheduleRebuildService {
         }
         return result;
     }
-
 }

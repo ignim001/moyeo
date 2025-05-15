@@ -98,12 +98,7 @@ public class UserService {
         user.updateProfile(dto.getNickname(), dto.getGender(), dto.getAge(), dto.getMbti(), imageUrl);
         userRepository.save(user);
     }
-    @Transactional(readOnly = true)
-    public Long getUserId(CustomOAuth2User userDetails) {
-        return userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new EntityNotFoundException("User Not Found"))
-                .getId();
-    }
+
 
 
     private boolean isDefaultImage(String imageUrl) {
