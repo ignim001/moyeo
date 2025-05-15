@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ScheduleSaveReqDto {
 
-    private Long userId;
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;

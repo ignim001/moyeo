@@ -2,20 +2,21 @@ package com.example.capstone.plan.controller;
 
 
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
+import com.example.capstone.plan.dto.request.*;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
-import com.example.capstone.plan.dto.request.ScheduleSaveReqDto;
-import com.example.capstone.plan.dto.request.ScheduleEditReqDto;
-import com.example.capstone.plan.dto.request.ScheduleCreateReqDto;
 import com.example.capstone.plan.dto.response.ScheduleSaveResDto;
 import com.example.capstone.plan.dto.response.FullScheduleResDto;
 import com.example.capstone.plan.dto.response.SimpleScheduleResDto;
 import com.example.capstone.plan.entity.TravelSchedule;
 import com.example.capstone.plan.service.*;
+import com.example.capstone.user.service.UserService;
 import com.example.capstone.util.gpt.GptCostAndTimePromptBuilder;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,8 @@ public class ScheduleController {
     private final OpenAiClient openAiClient;
     private final ScheduleEditService scheduleEditService;
     private final ScheduleRefinerService scheduleRefinerService;
+    private final ScheduleRebuildService scheduleRebuildService;
+    private final UserService userService;
 
 
 
@@ -52,9 +55,11 @@ public class ScheduleController {
     }
 
     @Operation(summary = "내 여행 목록 조회", description = "여행 제목, 시작일, 종료일을 조회합니다.")
-    @GetMapping("/list/{userId}")
-    public ResponseEntity<List<SimpleScheduleResDto>> getScheduleList(@PathVariable Long userId) {
+    @GetMapping("/list")
+    public ResponseEntity<List<SimpleScheduleResDto>> getScheduleList(
+            @AuthenticationPrincipal CustomOAuth2User userDetails) {
         try {
+            Long userId = userService.getUserId(userDetails);
             List<SimpleScheduleResDto> response = scheduleService.getSimpleScheduleList(userId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -88,9 +93,41 @@ public class ScheduleController {
 
     @Operation(summary = "추천 일정 저장", description = "사용자가 확정한 여행 일정을 데이터베이스에 저장합니다.")
     @PostMapping("/save")
-    public ResponseEntity<ScheduleSaveResDto> saveSchedule(@RequestBody ScheduleSaveReqDto request) {
-        ScheduleSaveResDto response = scheduleService.saveSchedule(request);
+    public ResponseEntity<ScheduleSaveResDto> saveSchedule(
+            @AuthenticationPrincipal CustomOAuth2User userDetails,
+            @RequestBody ScheduleSaveReqDto request) {
+        Long userId = userService.getUserId(userDetails);
+        ScheduleSaveResDto response = scheduleService.saveSchedule(request, userId);
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "기존 일정을 제외한 일정 재생성", description = "create로 받은 일정에서 장소들을 제외하고 새로운 일정을 생성합니다.")
+    @PostMapping("/regenerate")
+    public ResponseEntity<FullScheduleResDto> regenerate(@RequestBody ScheduleRegenerateReqDto request) {
+        try {
+            FullScheduleResDto response = scheduleService.regenerateSchedule(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+    @Operation(summary = "기존 일정을 제외한 일정 재생성", description = "create로 받은 일정에서 장소들을 제외하고 새로운 일정을 생성합니다.")
+    @PostMapping("/rebuild")
+    public ResponseEntity<FullScheduleResDto> rebuildSchedule(@RequestBody ScheduleRebuildReqDto request) {
+        try {
+            FullScheduleResDto result = scheduleRebuildService.rebuildFullSchedule(request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
 }
+
+
+
+
+
