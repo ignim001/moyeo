@@ -23,7 +23,7 @@ public class ScheduleRebuildReqDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DayNameOnlyBlock {
-        private String day; // "1일차", "2일차" (UI용)
+        private String day; // "1일차", "2일차"
         private List<String> names;
     }
 }

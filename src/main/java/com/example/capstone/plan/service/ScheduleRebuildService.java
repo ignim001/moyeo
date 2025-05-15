@@ -77,8 +77,8 @@ public class ScheduleRebuildService {
 
         List<PlaceResponse> result = new ArrayList<>();
         for (JsonNode node : root) {
-            String name = node.path("name").asText(); // ✅ GPT가 정제한 장소명
-            String gptOriginalName = node.path("gptOriginalName").asText(); // ✅ GPT가 만든 키워드
+            String name = node.path("name").asText(); //
+            String gptOriginalName = node.path("gptOriginalName").asText(); //
 
             // KakaoMap 검색
             KakaoPlaceDto kakao = kakaoMapClient.searchPlace(name);
@@ -87,8 +87,8 @@ public class ScheduleRebuildService {
             }
 
             PlaceResponse place = PlaceResponse.builder()
-                    .name(name) // ✅ GPT가 정제한 장소명 그대로
-                    .gptOriginalName(gptOriginalName) // ✅ GPT가 생성한 키워드
+                    .name(name) //
+                    .gptOriginalName(gptOriginalName) //
                     .type(node.path("type").asText())
                     .estimatedCost(node.path("estimatedCost").asInt())
                     .description(node.path("description").asText())
