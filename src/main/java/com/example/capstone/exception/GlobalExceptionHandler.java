@@ -11,14 +11,25 @@ import org.springframework.web.context.request.WebRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({Exception.class})
+    @ExceptionHandler({EntityNotFoundException.class, DuplicateNicknameException.class})
     public ResponseEntity<ErrorDetails> handleUserException(RuntimeException ex, WebRequest request) {
         ErrorDetails errorDetails =
-                new ErrorDetails(ex.getMessage(),
+                new ErrorDetails(
+                        ex.getMessage(),
                         request.getDescription(false),
                         null);
 
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorDetails> handleRuntimeException(RuntimeException ex, WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                ex.getMessage(),
+                request.getDescription(false),
+                null);
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

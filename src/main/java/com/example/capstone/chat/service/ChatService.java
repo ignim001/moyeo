@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Service
@@ -83,25 +84,44 @@ public class ChatService {
                 .unReadUserCount(readStatuses.stream()
                         .filter(rs -> !rs.getIsRead())
                         .count())
-                .timestamp(chatMessage.getCreatedTime())
+                .timestamp(chatMessage.getCreatedTime().atOffset(ZoneOffset.ofHours(9)))
                 .build();
     }
 
     // 자신이 속한 채팅방 조회
     @Transactional(readOnly = true)
     public List<MyChatRoomListResDto> getMyRoom(CustomOAuth2User userDetails) {
-        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
+        UserEntity currentUser = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
 
-        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserOrderByChatRoomUpdatedTimeDesc(user);
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserOrderByChatRoomUpdatedTimeDesc(currentUser);
+
+        List<ChatRoom> chatRooms = chatParticipants.stream()
+                .map(ChatParticipant::getChatRoom)
+                .toList();
+
+        Map<Long, Long> unreadCountMap = readStatusRepository.countUnreadByChatRoomsAndUser(chatRooms, currentUser);
 
         return chatParticipants.stream()
-                .map(c -> MyChatRoomListResDto.builder()
-                        .roomId(c.getChatRoom().getId())
-                        .otherUserNickname(c.getChatRoom().getRoomName())
-                        .unReadCount(readStatusRepository.countByChatRoomAndUserAndIsReadFalse(c.getChatRoom(), user)) // N + 1 문제
-                        .otherUserImageUrl(c.getChatRoom().getRoomImage())
-                        .build())
+                .map(c -> {
+                    ChatRoom chatRoom = c.getChatRoom();
+
+                    // 현재 유저를 제외한 상대방 찾기
+                    UserEntity otherUser = chatRoom.getChatParticipants().stream()
+                            .map(ChatParticipant::getUser)
+                            .filter(user -> !user.getId().equals(currentUser.getId()))
+                            .findFirst()
+                            .orElseThrow(() -> new EntityNotFoundException("1:1 채팅 X"));
+
+                    long unreadCount = unreadCountMap.getOrDefault(chatRoom.getId(), 0L);
+
+                    return MyChatRoomListResDto.builder()
+                            .roomId(chatRoom.getId())
+                            .otherUserNickname(otherUser.getNickname())
+                            .otherUserImageUrl(otherUser.getProfileImageUrl())
+                            .unReadCount(unreadCount)
+                            .build();
+                })
                 .toList();
     }
 
@@ -120,8 +140,6 @@ public class ChatService {
         }
 
         ChatRoom newRoom = ChatRoom.builder()
-                .roomName(otherUserNickname)
-                .roomImage(otherUser.getProfileImageUrl())
                 .build();
 
         chatRoomRepository.save(newRoom);
@@ -184,7 +202,7 @@ public class ChatService {
                         .unReadUserCount(m.getReadStatuses().stream()
                                 .filter(rs -> !rs.getIsRead())
                                 .count())
-                        .timestamp(m.getCreatedTime())
+                        .timestamp(m.getCreatedTime().atOffset(ZoneOffset.ofHours(9)))
                         .build())
                 .toList();
     }

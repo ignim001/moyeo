@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface ReadStatusRepository extends JpaRepository<ReadStatus, Integer> {
-    Long countByChatRoomAndUserAndIsReadFalse(ChatRoom chatRoom, UserEntity userEntity);
+public interface ReadStatusRepository extends JpaRepository<ReadStatus, Integer>, ReadStatusRepositoryCustom {
     List<ReadStatus> findByUserAndChatRoom(UserEntity user, ChatRoom chatRoom);
 }
