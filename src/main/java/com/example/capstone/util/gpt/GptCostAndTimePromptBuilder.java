@@ -22,6 +22,7 @@ public class GptCostAndTimePromptBuilder {
         sb.append("- 장소는 KakaoMap 기준으로 실제 존재하는 곳이야.\n");
         sb.append("- 가격은 대략적인 기준으로 알려줘 (식당: 1인 메뉴 / 숙소: 1인 1박 / 관광지: 입장료)\n");
         sb.append("- 각 장소 간 이동 시간은 도보, 대중교통, 차량 기준으로 모두 제공해줘. 단, 실제 소요 시간보다 10분 정도 여유 있게 반영해줘.\n");
+        sb.append("- \n");
         sb.append("- 거리와 관계없이 도보 시간도 반드시 계산해줘. 오래 걸리더라도 도보 시간이 0이 되지 않도록 꼭 포함해줘.\n");
         sb.append("- JSON 코드블록 없이 평문 JSON으로만 응답해줘. 백틱(```)이나 마크다운 없이 JSON 그대로 줘.\n\n");
 

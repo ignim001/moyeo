@@ -4,12 +4,12 @@ package com.example.capstone.plan.controller;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
 import com.example.capstone.plan.dto.request.*;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
+import com.example.capstone.plan.dto.response.ScheduleRebuildResDto;
 import com.example.capstone.plan.dto.response.ScheduleSaveResDto;
 import com.example.capstone.plan.dto.response.FullScheduleResDto;
 import com.example.capstone.plan.dto.response.SimpleScheduleResDto;
 import com.example.capstone.plan.entity.TravelSchedule;
 import com.example.capstone.plan.service.*;
-import com.example.capstone.user.service.UserService;
 import com.example.capstone.util.gpt.GptCostAndTimePromptBuilder;
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,12 +35,6 @@ public class ScheduleController {
     private final ScheduleRebuildService scheduleRebuildService;
 
 
-
-
-
-    /**
-     * ✅ GET 방식 - 저장된 scheduleId 기반 상세보기
-     */
     @Operation(summary = "스케줄 상세조회", description = "저장된 스케줄 ID로 전체 일정을 조회합니다.")
     @GetMapping("/full/{scheduleId}")
     public ResponseEntity<FullScheduleResDto> getFullDetail(@PathVariable Long scheduleId) {
@@ -115,9 +109,9 @@ public class ScheduleController {
     }
     @Operation(summary = "전체 일정 리빌딩", description = "수정된 장소 리스트를 기반으로 하루 일정이 아닌 전체 일정을 리빌딩합니다.")
     @PostMapping("/rebuild")
-    public ResponseEntity<FullScheduleResDto> rebuildSchedule(@RequestBody ScheduleRebuildReqDto request) {
+    public ResponseEntity<ScheduleRebuildResDto> rebuildDay(@RequestBody ScheduleRebuildReqDto request) {
         try {
-            FullScheduleResDto result = scheduleRebuildService.rebuildFullSchedule(request);
+            ScheduleRebuildResDto result = scheduleRebuildService.rebuildDay(request.getNames());
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             e.printStackTrace();
@@ -125,8 +119,10 @@ public class ScheduleController {
         }
     }
 
-
 }
+
+
+
 
 
 

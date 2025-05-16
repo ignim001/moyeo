@@ -2,18 +2,15 @@ package com.example.capstone.plan.service;
 
 import com.example.capstone.plan.dto.common.FromPreviousDto;
 import com.example.capstone.plan.dto.common.KakaoPlaceDto;
-import com.example.capstone.plan.dto.request.ScheduleRebuildReqDto;
-import com.example.capstone.plan.dto.request.ScheduleRebuildReqDto.ScheduleNameBlock;
-import com.example.capstone.plan.dto.response.FullScheduleResDto;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
 import com.example.capstone.plan.dto.response.FullScheduleResDto.PlaceResponse;
+import com.example.capstone.plan.dto.response.ScheduleRebuildResDto;
 import com.example.capstone.util.gpt.GptRebuildPromptBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,47 +23,19 @@ public class ScheduleRebuildService {
     private final KakaoMapClient kakaoMapClient;
     private final ObjectMapper objectMapper;
 
-    public FullScheduleResDto rebuildFullSchedule(ScheduleRebuildReqDto request) throws Exception {
-        List<String> names = extractNames(request.getSchedule());
+    public ScheduleRebuildResDto rebuildDay(List<String> names) throws Exception {
         String prompt = promptBuilder.build(names);
         String gptResponse = openAiClient.callGpt(prompt);
-        List<PlaceResponse> rebuiltPlaces = parseGptResponse(gptResponse);
+        List<PlaceResponse> places = parseGptResponse(gptResponse);
 
-        List<DailyScheduleBlock> rebuiltDays = new ArrayList<>();
-        int idx = 0;
-        LocalDate currentDate = request.getStartDate();
+        int total = places.stream().mapToInt(PlaceResponse::getEstimatedCost).sum();
 
-        for (int i = 0; i < request.getSchedule().size(); i++) {
-            ScheduleNameBlock day = request.getSchedule().get(i);
-            List<PlaceResponse> rebuiltDayPlaces = new ArrayList<>();
-            for (int j = 0; j < day.getNames().size(); j++) {
-                rebuiltDayPlaces.add(rebuiltPlaces.get(idx++));
-            }
-            int total = rebuiltDayPlaces.stream().mapToInt(PlaceResponse::getEstimatedCost).sum();
-
-            rebuiltDays.add(DailyScheduleBlock.builder()
-                    .day(day.getDayLabel())
-                    .date(currentDate.plusDays(i).toString())
-                    .totalEstimatedCost(total)
-                    .places(rebuiltDayPlaces)
-                    .build());
-        }
-
-        return FullScheduleResDto.builder()
-                .title(request.getTitle())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .days(rebuiltDays)
+        return ScheduleRebuildResDto.builder()
+                .totalEstimatedCost(total)
+                .places(places)
                 .build();
     }
 
-    private List<String> extractNames(List<ScheduleNameBlock> days) {
-        List<String> result = new ArrayList<>();
-        for (ScheduleNameBlock day : days) {
-            result.addAll(day.getNames());
-        }
-        return result;
-    }
 
     private List<PlaceResponse> parseGptResponse(String json) throws Exception {
         JsonNode root = objectMapper.readTree(json);
