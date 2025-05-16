@@ -2,9 +2,9 @@ package com.example.capstone.util.gpt;
 
 import com.example.capstone.plan.dto.request.ScheduleCreateReqDto;
 import com.example.capstone.plan.entity.City;
-import com.example.capstone.plan.entity.Mbti;
+import com.example.capstone.user.entity.MBTI;
 import com.example.capstone.plan.entity.PeopleGroup;
-import com.example.capstone.plan.entity.TravelStyle;
+import com.example.capstone.matching.entity.TravelStyle;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
@@ -74,7 +74,7 @@ public class GptScheduleStructurePromptBuilder {
   - **숙소는 가능한 한 그날 마지막 관광지에서 가까운 지역 기반 숙소로 작성해줘**
 """);
 
-        if (request.getMbti() != Mbti.NONE) {
+        if (request.getMbti() != MBTI.NONE) {
             sb.append("- MBTI: ").append(request.getMbti()).append("\n");
         }
         if (request.getTravelStyle() != TravelStyle.NONE) {

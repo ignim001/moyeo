@@ -3,8 +3,7 @@ package com.example.capstone.plan.controller;
 
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
 import com.example.capstone.plan.dto.request.*;
-import com.example.capstone.plan.dto.response.FullScheduleResDto.DailyScheduleBlock;
-import com.example.capstone.plan.dto.response.ScheduleRebuildResDto;
+import com.example.capstone.plan.dto.response.ScheduleEditResDto;
 import com.example.capstone.plan.dto.response.ScheduleSaveResDto;
 import com.example.capstone.plan.dto.response.FullScheduleResDto;
 import com.example.capstone.plan.dto.response.SimpleScheduleResDto;
@@ -30,9 +29,8 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final GptCostAndTimePromptBuilder promptBuilder;
     private final OpenAiClient openAiClient;
-    private final ScheduleEditService scheduleEditService;
     private final ScheduleRefinerService scheduleRefinerService;
-    private final ScheduleRebuildService scheduleRebuildService;
+    private final ScheduleEditService scheduleEditService;
 
 
     @Operation(summary = "스케줄 상세조회", description = "저장된 스케줄 ID로 전체 일정을 조회합니다.")
@@ -54,8 +52,7 @@ public class ScheduleController {
     public ResponseEntity<List<SimpleScheduleResDto>> getScheduleList(
             @AuthenticationPrincipal CustomOAuth2User userDetails) {
         try {
-            Long userId = userDetails.getUserId();
-            List<SimpleScheduleResDto> response = scheduleService.getSimpleScheduleList(userId);
+            List<SimpleScheduleResDto> response = scheduleService.getSimpleScheduleList(userDetails);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
@@ -75,43 +72,32 @@ public class ScheduleController {
         }
     }
 
-    @Operation(summary = "일정 편집", description = "하루치 일정에 대해 추가, 수정, 삭제, 순서 변경을 한번에 반영합니다.")
-    @PatchMapping("/edit")
-    public ResponseEntity<DailyScheduleBlock> editDaySchedule(
-            @RequestBody ScheduleEditReqDto request
-    ) throws Exception {
-        DailyScheduleBlock result = scheduleEditService.applyEditToDay(request);
-        return ResponseEntity.ok(result);
-    }
-
-
 
     @Operation(summary = "추천 일정 저장", description = "사용자가 확정한 여행 일정을 데이터베이스에 저장합니다.")
     @PostMapping("/save")
     public ResponseEntity<ScheduleSaveResDto> saveSchedule(
             @AuthenticationPrincipal CustomOAuth2User userDetails,
             @RequestBody ScheduleSaveReqDto request) {
-        Long userId = userDetails.getUserId();
-        ScheduleSaveResDto response = scheduleService.saveSchedule(request, userId);
+        ScheduleSaveResDto response = scheduleService.saveSchedule(request, userDetails);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "기존 일정을 제외한 일정 재생성", description = "create로 받은 일정에서 장소들을 제외하고 새로운 일정을 생성합니다.")
-    @PostMapping("/regenerate")
-    public ResponseEntity<FullScheduleResDto> regenerate(@RequestBody ScheduleRegenerateReqDto request) {
+    @PostMapping("/recreate")
+    public ResponseEntity<FullScheduleResDto> regenerate(@RequestBody ScheduleRecreateReqDto request) {
         try {
-            FullScheduleResDto response = scheduleService.regenerateSchedule(request);
+            FullScheduleResDto response = scheduleService.recreateSchedule(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(null);
         }
     }
-    @Operation(summary = "전체 일정 리빌딩", description = "수정된 장소 리스트를 기반으로 하루 일정이 아닌 전체 일정을 리빌딩합니다.")
-    @PostMapping("/rebuild")
-    public ResponseEntity<ScheduleRebuildResDto> rebuildDay(@RequestBody ScheduleRebuildReqDto request) {
+    @Operation(summary = "전체 일정 수정", description = "수정된 장소 리스트를 기반으로 하루 일정이 아닌 전체 일정을 리빌딩합니다.")
+    @PostMapping("/Edit")
+    public ResponseEntity<ScheduleEditResDto> rebuildDay(@RequestBody ScheduleEditReqDto request) {
         try {
-            ScheduleRebuildResDto result = scheduleRebuildService.rebuildDay(request.getNames());
+            ScheduleEditResDto result = scheduleEditService.Edit(request.getNames());
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             e.printStackTrace();

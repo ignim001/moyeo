@@ -2,16 +2,16 @@ package com.example.capstone.util.gpt;
 
 import com.example.capstone.plan.dto.request.ScheduleCreateReqDto;
 import com.example.capstone.plan.entity.City;
-import com.example.capstone.plan.entity.Mbti;
+import com.example.capstone.user.entity.MBTI;
 import com.example.capstone.plan.entity.PeopleGroup;
-import com.example.capstone.plan.entity.TravelStyle;
+import com.example.capstone.matching.entity.TravelStyle;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Component
-public class GptRegeneratePromptBuilder {
+public class GptRecreatePromptBuilder {
 
     public String build(ScheduleCreateReqDto request, List<String> excludePlaceNames) {
         StringBuilder sb = new StringBuilder();
@@ -103,7 +103,7 @@ JSON 응답은 아래 형식만 반환해. 이외에는 그 어떤 문장, 설�
 """.formatted(destinationText));
 
         // 사용자 성향
-        if (request.getMbti() != Mbti.NONE) sb.append("- MBTI: ").append(request.getMbti()).append("\n");
+        if (request.getMbti() != MBTI.NONE) sb.append("- MBTI: ").append(request.getMbti()).append("\n");
         if (request.getTravelStyle() != TravelStyle.NONE) sb.append("- 여행 성향: ").append(request.getTravelStyle()).append("\n");
         if (request.getPeopleGroup() != PeopleGroup.NONE) sb.append("- 동행자 유형: ").append(request.getPeopleGroup()).append("\n");
         if (request.getBudget() != null) sb.append("- 예산: ").append(request.getBudget()).append("원\n");

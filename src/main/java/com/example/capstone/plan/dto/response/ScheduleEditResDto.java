@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScheduleRebuildResDto {
+public class ScheduleEditResDto {
     private int totalEstimatedCost;
     private List<PlaceResponse> places;
 }

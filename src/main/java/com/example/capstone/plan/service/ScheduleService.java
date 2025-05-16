@@ -2,7 +2,7 @@ package com.example.capstone.plan.service;
 
 import com.example.capstone.plan.dto.common.FromPreviousDto;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
-import com.example.capstone.plan.dto.request.ScheduleRegenerateReqDto;
+import com.example.capstone.plan.dto.request.ScheduleRecreateReqDto;
 import com.example.capstone.plan.dto.request.ScheduleSaveReqDto;
 import com.example.capstone.plan.dto.request.ScheduleCreateReqDto;
 import com.example.capstone.plan.dto.response.ScheduleSaveResDto;
@@ -21,8 +21,9 @@ import com.example.capstone.user.entity.UserEntity;
 import com.example.capstone.user.repository.UserRepository;
 import com.example.capstone.util.gpt.GptCostAndTimePromptBuilder;
 import com.example.capstone.util.gpt.GptPlaceDescriptionPromptBuilder;
-import com.example.capstone.util.gpt.GptRegeneratePromptBuilder;
+import com.example.capstone.util.gpt.GptRecreatePromptBuilder;
 import com.example.capstone.util.gpt.GptScheduleStructurePromptBuilder;
+import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +41,7 @@ public class ScheduleService {
     private final GptScheduleStructurePromptBuilder structurePromptBuilder;
     private final GptPlaceDescriptionPromptBuilder descriptionPromptBuilder;
     private final GptCostAndTimePromptBuilder costAndTimePromptBuilder;
-    private final GptRegeneratePromptBuilder gptRegeneratePromptBuilder;
+    private final GptRecreatePromptBuilder gptRecreatePromptBuilder;
     private final OpenAiClient openAiClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final KakaoMapClient kakaoMapClient;
@@ -49,6 +49,7 @@ public class ScheduleService {
     private final DayRepository dayRepository;
     private final PlaceRepository placeRepository;
     private final UserRepository userRepository;
+
 
     public FullScheduleResDto generateFullSchedule(ScheduleCreateReqDto request) throws Exception {
         String schedulePrompt = structurePromptBuilder.build(request);
@@ -117,7 +118,8 @@ public class ScheduleService {
     }
 
     @Transactional
-    public ScheduleSaveResDto saveSchedule(ScheduleSaveReqDto request, Long userId) {
+    public ScheduleSaveResDto saveSchedule(ScheduleSaveReqDto request, CustomOAuth2User userDetails) {
+        Long userId = userDetails.getUserId();
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -160,6 +162,19 @@ public class ScheduleService {
         }
 
         return new ScheduleSaveResDto(travelSchedule.getId());
+    }
+
+    public List<SimpleScheduleResDto> getSimpleScheduleList(CustomOAuth2User userDetails) {
+        Long userId = userDetails.getUserId();
+        List<TravelSchedule> travelSchedules = scheduleRepository.findByUserId(userId);
+        return travelSchedules.stream()
+                .map(schedule -> new SimpleScheduleResDto(
+                        schedule.getId(),
+                        schedule.getTitle(),
+                        schedule.getStartDate(),
+                        schedule.getEndDate(),
+                        formatDday(calculateDDay(schedule.getStartDate()))
+                )).toList();
     }
 
     public List<PlaceDetailDto> getPlacesFromDatabase(Long scheduleId) {
@@ -224,18 +239,6 @@ public class ScheduleService {
                 .orElseThrow(() -> new IllegalArgumentException(" 해당 ID의 일정이 없습니다: " + scheduleId));
     }
 
-    public List<SimpleScheduleResDto> getSimpleScheduleList(Long userId) {
-        List<TravelSchedule> travelSchedules = scheduleRepository.findByUserId(userId);
-        return travelSchedules.stream()
-                .map(schedule -> new SimpleScheduleResDto(
-                        schedule.getId(),
-                        schedule.getTitle(),
-                        schedule.getStartDate(),
-                        schedule.getEndDate(),
-                        formatDday(calculateDDay(schedule.getStartDate()))
-                )).toList();
-    }
-
     private int calculateDDay(LocalDate startDate) {
         return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
     }
@@ -245,19 +248,15 @@ public class ScheduleService {
         return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
     }
 
-    public FullScheduleResDto regenerateSchedule(ScheduleRegenerateReqDto regenerateRequest) throws Exception {
-        // 1. 파라미터 분리
+    public FullScheduleResDto recreateSchedule(ScheduleRecreateReqDto regenerateRequest) throws Exception {
         ScheduleCreateReqDto request = regenerateRequest.getRequest();
         List<String> excludePlaceNames = regenerateRequest.getExcludedNames();
 
-        // 2. GPT 프롬프트 생성 및 호출
-        String prompt = gptRegeneratePromptBuilder.build(request, excludePlaceNames);
+        String prompt = gptRecreatePromptBuilder.build(request, excludePlaceNames);
         String gptResponse = openAiClient.callGpt(prompt);
 
-        // 3. 장소 정제
         List<PlaceDetailDto> refinedPlaces = scheduleRefinerService.getRefinedPlacesFromPrompt(gptResponse);
 
-        // 4. 한줄 설명 생성
         List<String> placeNames = refinedPlaces.stream().map(PlaceDetailDto::getName).toList();
         String descPrompt = descriptionPromptBuilder.build(placeNames);
         String descResponse = openAiClient.callGpt(descPrompt);
@@ -266,13 +265,11 @@ public class ScheduleService {
             place.setDescription(descriptionMap.getOrDefault(place.getName(), ""));
         }
 
-        // 5. 예산 및 이동시간 추정
         String costPrompt = costAndTimePromptBuilder.build(refinedPlaces);
         String costResponse = openAiClient.callGpt(costPrompt);
         List<FullScheduleResDto.PlaceResponse> finalPlaces =
                 costAndTimePromptBuilder.parseGptResponse(costResponse, refinedPlaces);
 
-        // 6. 일정 블록 구조로 재구성
         long nights = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
         long days = nights + 1;
 
@@ -298,12 +295,7 @@ public class ScheduleService {
             index += currentDayCount;
         }
 
-        // 7. 응답 생성
         String title = request.getDestination().getDisplayName() + " " + nights + "박 " + days + "일 여행";
         return new FullScheduleResDto(title, request.getStartDate(), request.getEndDate(), blocks);
     }
-
-
-
-
 }

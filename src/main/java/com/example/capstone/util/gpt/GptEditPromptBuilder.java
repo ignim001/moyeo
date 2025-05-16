@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class GptRebuildPromptBuilder {
+public class GptEditPromptBuilder {
 
     public String build(List<String> names) {
         StringBuilder sb = new StringBuilder();
