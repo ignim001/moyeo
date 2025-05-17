@@ -18,14 +18,15 @@ import java.util.UUID;
 public class ImageService {
 
     private final AmazonS3Client amazonS3Client;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    public String imageUpload(MultipartFile file) {
+    public String imageUpload(MultipartFile file, String directoryName) {
+        // 디렉토리명을 포함한 파일명 생성
+        String fileName = directoryName + "/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
 
-        String fileName = UUID.randomUUID() + "_"+ file.getOriginalFilename();
-
-        // 업로드할 파일 메타정보 생성
+        // 메타데이터 설정
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(file.getSize());
         metadata.setContentType(file.getContentType());
@@ -36,6 +37,7 @@ public class ImageService {
             throw new RuntimeException("파일 업로드 실패", e);
         }
 
+        // 업로드된 이미지의 전체 URL 반환
         return amazonS3Client.getUrl(bucketName, fileName).toString();
     }
 
@@ -44,3 +46,4 @@ public class ImageService {
         amazonS3Client.deleteObject(new DeleteObjectRequest(bucketName, fileKey));
     }
 }
+

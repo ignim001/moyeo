@@ -26,18 +26,20 @@ public class UserService {
     @Value("${default.image-url}")
     private String DEFAULT_PROFILE_IMAGE_URL;
 
+    private static final String USER_IMAGE_DIR = "user-image";
+
     @Transactional
     public UserEntity signup(CustomOAuth2User userDetails, UserProfileReqDto dto, MultipartFile profileImage) {
         // 닉네임 중복 처리
         if (userRepository.existsByNickname(dto.getNickname())) {
-                throw new DuplicateNicknameException("Nickname already exists");
+            throw new DuplicateNicknameException("Nickname already exists");
         }
 
         String imageUrl;
 
         if (profileImage != null && !profileImage.isEmpty()) {
-            // S3 이미지 저장후 URL 저장
-            imageUrl = imageService.imageUpload(profileImage);
+            // user-image 디렉토리에 저장
+            imageUrl = imageService.imageUpload(profileImage, USER_IMAGE_DIR);
         } else {
             imageUrl = DEFAULT_PROFILE_IMAGE_URL;
         }
@@ -57,7 +59,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserProfileResDto findUser(CustomOAuth2User customOAuth2User){
+    public UserProfileResDto findUser(CustomOAuth2User customOAuth2User) {
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
@@ -71,7 +73,7 @@ public class UserService {
     }
 
     @Transactional
-    public void updateProfile(CustomOAuth2User customOAuth2User, UserProfileReqDto dto, MultipartFile profileImage){
+    public void updateProfile(CustomOAuth2User customOAuth2User, UserProfileReqDto dto, MultipartFile profileImage) {
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
@@ -82,17 +84,18 @@ public class UserService {
         String imageUrl = user.getProfileImageUrl();
 
         if (profileImage == null || profileImage.isEmpty()) {
-            // 저장된 이미지가 기본 이미지가 아닌경우
+            // 기존 이미지가 기본 이미지가 아닌 경우 삭제
             if (!isDefaultImage(imageUrl)) {
                 imageService.deleteImage(imageUrl);
             }
-            // 이미지 없는경우 기본 이미지 URL 입력
             imageUrl = DEFAULT_PROFILE_IMAGE_URL;
         } else {
+            // 기존 이미지 삭제
             if (!isDefaultImage(imageUrl)) {
                 imageService.deleteImage(imageUrl);
             }
-            imageUrl = imageService.imageUpload(profileImage);
+            // 새 이미지 업로드
+            imageUrl = imageService.imageUpload(profileImage, USER_IMAGE_DIR);
         }
 
         user.updateProfile(dto.getNickname(), dto.getGender(), dto.getAge(), dto.getMbti(), imageUrl);
