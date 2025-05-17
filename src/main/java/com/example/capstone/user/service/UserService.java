@@ -6,8 +6,8 @@ import com.example.capstone.user.dto.UserProfileReqDto;
 import com.example.capstone.user.dto.UserProfileResDto;
 import com.example.capstone.user.entity.UserEntity;
 import com.example.capstone.user.exception.DuplicateNicknameException;
-import com.example.capstone.user.exception.UserNotFoundException;
 import com.example.capstone.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,7 +61,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserProfileResDto findUser(CustomOAuth2User customOAuth2User) {
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
         return UserProfileResDto.builder()
                 .nickname(user.getNickname())
@@ -75,7 +75,7 @@ public class UserService {
     @Transactional
     public void updateProfile(CustomOAuth2User customOAuth2User, UserProfileReqDto dto, MultipartFile profileImage) {
         UserEntity user = userRepository.findByProviderId(customOAuth2User.getProviderId())
-                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
         if (userRepository.existsByNicknameAndProviderIdNot(dto.getNickname(), customOAuth2User.getProviderId())) {
             throw new DuplicateNicknameException("Nickname already exists");

@@ -3,8 +3,8 @@ package com.example.capstone.matching.repository;
 import com.example.capstone.matching.entity.*;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,13 +17,10 @@ import static com.example.capstone.user.entity.QUserEntity.userEntity;
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
+@RequiredArgsConstructor
 public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-
-    public MatchingProfileRepositoryCustomImpl(@Autowired JPAQueryFactory queryFactory) {
-        this.queryFactory = queryFactory;
-    }
 
     @Override
     public List<MatchingProfile> matchingProfile(MatchingProfile profile) {
