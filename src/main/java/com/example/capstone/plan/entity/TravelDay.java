@@ -18,10 +18,10 @@ public class TravelDay {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id")
-    private TravelSchedule travelSchedule;  // ✅ 부모 Schedule
+    private TravelSchedule travelSchedule;  //
 
     @OneToMany(mappedBy = "travelDay", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TravelPlace> travelPlaces;  // ✅ 연관된 Place 목록
+    private List<TravelPlace> travelPlaces;  //
 
     @Column(name = "day_number")
     private Integer dayNumber;

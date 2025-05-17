@@ -18,8 +18,6 @@ public class TravelPlace {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
     private String name;  // 장소 이름
 
     private String type;  // 식사/관광지/액티비티/숙소 등

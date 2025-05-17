@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<TravelSchedule, Long> {
 
@@ -19,6 +20,11 @@ public interface ScheduleRepository extends JpaRepository<TravelSchedule, Long> 
         ORDER BY d.dayNumber ASC, p.placeOrder ASC
     """)
     List<TravelPlace> findAllPlacesByScheduleId(@Param("scheduleId") Long scheduleId);
+    @Query("""
+    SELECT s FROM TravelSchedule s
+    WHERE s.id = :scheduleId AND s.user.id = :userId
+""")
+    Optional<TravelSchedule> findByIdAndUserId(@Param("scheduleId") Long scheduleId, @Param("userId") Long userId);
     List<TravelSchedule> findByUserId(Long userId);
 
 }

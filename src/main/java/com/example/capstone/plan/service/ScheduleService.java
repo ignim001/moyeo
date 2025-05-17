@@ -50,7 +50,6 @@ public class ScheduleService {
     private final PlaceRepository placeRepository;
     private final UserRepository userRepository;
 
-
     public FullScheduleResDto generateFullSchedule(ScheduleCreateReqDto request) throws Exception {
         String schedulePrompt = structurePromptBuilder.build(request);
         String gptResponse = openAiClient.callGpt(schedulePrompt);
@@ -73,14 +72,10 @@ public class ScheduleService {
 
         Map<Integer, List<PlaceDetailDto>> groupedByDayIndex = new LinkedHashMap<>();
         int days = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
-        for (int i = 0; i < days; i++) {
-            groupedByDayIndex.put(i, new ArrayList<>());
-        }
+        for (int i = 0; i < days; i++) groupedByDayIndex.put(i, new ArrayList<>());
         for (int i = 0; i < enrichedPlaces.size(); i++) {
-            int dayIndex = i / 7; // 하루에 7개 장소 기준
-            if (dayIndex < days) {
-                groupedByDayIndex.get(dayIndex).add(enrichedPlaces.get(i));
-            }
+            int dayIndex = i / 7;
+            if (dayIndex < days) groupedByDayIndex.get(dayIndex).add(enrichedPlaces.get(i));
         }
 
         List<DailyScheduleBlock> blocks = new ArrayList<>();
@@ -119,8 +114,8 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleSaveResDto saveSchedule(ScheduleSaveReqDto request, CustomOAuth2User userDetails) {
-        Long userId = userDetails.getUserId();
-        UserEntity user = userRepository.findById(userId)
+        String providerId = userDetails.getProviderId();
+        UserEntity user = userRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         TravelSchedule travelSchedule = TravelSchedule.builder()
@@ -131,11 +126,16 @@ public class ScheduleService {
                 .build();
         scheduleRepository.save(travelSchedule);
 
+        LocalDate currentDate = request.getStartDate();
         for (int i = 0; i < request.getDays().size(); i++) {
             ScheduleSaveReqDto.DayRequest dayRequest = request.getDays().get(i);
+            String dayLabel = (i + 1) + "일차";
+
             TravelDay travelDay = TravelDay.builder()
                     .travelSchedule(travelSchedule)
                     .dayNumber(i + 1)
+                    .date(currentDate.toString())
+                    .day(dayLabel)
                     .build();
             dayRepository.save(travelDay);
 
@@ -159,14 +159,18 @@ public class ScheduleService {
                         .build();
                 placeRepository.save(travelPlace);
             }
+            currentDate = currentDate.plusDays(1);
         }
 
         return new ScheduleSaveResDto(travelSchedule.getId());
     }
 
     public List<SimpleScheduleResDto> getSimpleScheduleList(CustomOAuth2User userDetails) {
-        Long userId = userDetails.getUserId();
-        List<TravelSchedule> travelSchedules = scheduleRepository.findByUserId(userId);
+        String providerId = userDetails.getProviderId();
+        UserEntity user = userRepository.findByProviderId(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        List<TravelSchedule> travelSchedules = scheduleRepository.findByUserId(user.getId());
         return travelSchedules.stream()
                 .map(schedule -> new SimpleScheduleResDto(
                         schedule.getId(),
@@ -176,6 +180,19 @@ public class ScheduleService {
                         formatDday(calculateDDay(schedule.getStartDate()))
                 )).toList();
     }
+
+    public FullScheduleResDto getFullSchedule(Long scheduleId, CustomOAuth2User userDetails) {
+        String providerId = userDetails.getProviderId();
+        UserEntity user = userRepository.findByProviderId(providerId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        TravelSchedule schedule = scheduleRepository.findByIdAndUserId(scheduleId, user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("접근 권한이 없습니다."));
+
+        List<PlaceDetailDto> places = getPlacesFromDatabase(scheduleId);
+        return convertToBlockStructure(places, schedule);
+    }
+
 
     public List<PlaceDetailDto> getPlacesFromDatabase(Long scheduleId) {
         List<TravelPlace> travelPlaces = scheduleRepository.findAllPlacesByScheduleId(scheduleId);
@@ -197,14 +214,10 @@ public class ScheduleService {
     public FullScheduleResDto convertToBlockStructure(List<PlaceDetailDto> places, TravelSchedule travelSchedule) {
         int days = (int) ChronoUnit.DAYS.between(travelSchedule.getStartDate(), travelSchedule.getEndDate()) + 1;
         Map<Integer, List<PlaceDetailDto>> groupedByDayIndex = new LinkedHashMap<>();
-        for (int i = 0; i < days; i++) {
-            groupedByDayIndex.put(i, new ArrayList<>());
-        }
+        for (int i = 0; i < days; i++) groupedByDayIndex.put(i, new ArrayList<>());
         for (int i = 0; i < places.size(); i++) {
             int dayIndex = i / 7;
-            if (dayIndex < days) {
-                groupedByDayIndex.get(dayIndex).add(places.get(i));
-            }
+            if (dayIndex < days) groupedByDayIndex.get(dayIndex).add(places.get(i));
         }
 
         List<DailyScheduleBlock> blocks = new ArrayList<>();
@@ -232,20 +245,6 @@ public class ScheduleService {
                 travelSchedule.getEndDate(),
                 blocks
         );
-    }
-
-    public TravelSchedule getScheduleById(Long scheduleId) {
-        return scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new IllegalArgumentException(" 해당 ID의 일정이 없습니다: " + scheduleId));
-    }
-
-    private int calculateDDay(LocalDate startDate) {
-        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
-    }
-
-    private String formatDday(int d) {
-        if (d == 0) return "D-Day";
-        return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
     }
 
     public FullScheduleResDto recreateSchedule(ScheduleRecreateReqDto regenerateRequest) throws Exception {
@@ -297,5 +296,14 @@ public class ScheduleService {
 
         String title = request.getDestination().getDisplayName() + " " + nights + "박 " + days + "일 여행";
         return new FullScheduleResDto(title, request.getStartDate(), request.getEndDate(), blocks);
+    }
+
+    private int calculateDDay(LocalDate startDate) {
+        return (int) ChronoUnit.DAYS.between(LocalDate.now(), startDate);
+    }
+
+    private String formatDday(int d) {
+        if (d == 0) return "D-Day";
+        return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
     }
 }
