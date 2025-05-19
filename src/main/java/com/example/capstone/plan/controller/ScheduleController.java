@@ -8,6 +8,7 @@ import com.example.capstone.plan.dto.response.SimpleScheduleResDto;
 import com.example.capstone.plan.service.*;
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/schedule")
 @RequiredArgsConstructor
+@Tag(name = "Schedule API", description = "여행 일정 생성, 수정, 저장 관련 API")
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
