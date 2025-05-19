@@ -27,17 +27,18 @@ public class ChatParticipantRepositoryCustomImpl implements ChatParticipantRepos
         return Optional.ofNullable(queryFactory.select(cp1.chatRoom)
                 .from(cp1)
                 .join(cp2).on(cp1.chatRoom.id.eq(cp2.chatRoom.id))
-                .where(cp1.id.eq(myId),
-                        cp2.id.eq(otherUserId))
+                .where(cp1.user.id.eq(myId),
+                        cp2.user.id.eq(otherUserId))
                 .fetchOne());
     }
 
-    @Override
-    public List<ChatParticipant> findByUserOrderByChatRoomUpdatedTimeDesc(UserEntity user) {
-        return queryFactory.selectFrom(chatParticipant)
-                .join(chatParticipant.chatRoom, chatRoom)
-                .where(chatParticipant.user.id.eq(user.getId()))
-                .orderBy(chatParticipant.chatRoom.updatedTime.desc())
-                .fetch();
-    }
+//    @Override
+//    public List<ChatParticipant> findByUserAndIsDeletedFalseOrderByChatRoomUpdatedTimeDesc(UserEntity user) {
+//        return queryFactory.selectFrom(chatParticipant)
+//                .join(chatParticipant.chatRoom, chatRoom).fetchJoin()
+//                .where(chatParticipant.user.id.eq(user.getId()),
+//                        chatParticipant.isDeleted.eq(false))
+//                .orderBy(chatParticipant.chatRoom.updatedTime.desc())
+//                .fetch();
+//    }
 }
