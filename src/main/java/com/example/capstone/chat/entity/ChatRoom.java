@@ -32,6 +32,7 @@ public class ChatRoom {
 
     @CreationTimestamp
     private LocalDateTime createdTime;
+    @UpdateTimestamp
     private LocalDateTime updatedTime;
 
     public void updateChatRoom(LocalDateTime updateTime) {

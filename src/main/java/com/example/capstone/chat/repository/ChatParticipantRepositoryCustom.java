@@ -14,6 +14,5 @@ public interface ChatParticipantRepositoryCustom {
             "chatRoom.participants",
             "chatRoom.participants.user"
     })
-    List<ChatParticipant> findByUserOrderByChatRoomUpdatedTimeDesc(UserEntity user);
     Optional<ChatRoom> findExistRoom(Long myId, Long otherUserId);
 }

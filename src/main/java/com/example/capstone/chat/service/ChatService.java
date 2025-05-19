@@ -94,7 +94,7 @@ public class ChatService {
         UserEntity currentUser = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
 
-        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserOrderByChatRoomUpdatedTimeDesc(currentUser);
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserAndIsDeletedFalseOrderByChatRoomUpdatedTimeDesc(currentUser);
 
         List<ChatRoom> chatRooms = chatParticipants.stream()
                 .map(ChatParticipant::getChatRoom)
@@ -111,7 +111,7 @@ public class ChatService {
                             .map(ChatParticipant::getUser)
                             .filter(user -> !user.getId().equals(currentUser.getId()))
                             .findFirst()
-                            .orElseThrow(() -> new EntityNotFoundException("1:1 채팅 X"));
+                            .orElse(UserEntity.deletedUserPlaceholder()); // 또는 null-safe 처리
 
                     long unreadCount = unreadCountMap.getOrDefault(chatRoom.getId(), 0L);
 
@@ -153,6 +153,7 @@ public class ChatService {
         ChatParticipant chatParticipant = ChatParticipant.builder()
                 .chatRoom(chatRoom)
                 .user(user)
+                .isDeleted(false)
                 .build();
         chatParticipantRepository.save(chatParticipant);
     }
@@ -168,11 +169,13 @@ public class ChatService {
 
         ChatParticipant chatParticipant = chatParticipantRepository.findByUserAndChatRoom(user, chatRoom)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ChatParticipant not found"));
-        chatParticipantRepository.delete(chatParticipant);
 
-        // 모든 참여자가 나간경우 채팅방 삭제
+        chatParticipant.leave();
+
+        // 모든 유저가 나갔는지 확인
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
-        if (chatParticipants.isEmpty()) {
+        boolean allLeft = chatParticipants.stream().allMatch(ChatParticipant::getIsDeleted);
+        if (allLeft) {
             chatRoomRepository.delete(chatRoom);
         }
     }
