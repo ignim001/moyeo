@@ -25,7 +25,6 @@ import com.example.capstone.util.gpt.GptRecreatePromptBuilder;
 import com.example.capstone.util.gpt.GptScheduleStructurePromptBuilder;
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -306,15 +305,5 @@ public class ScheduleService {
     private String formatDday(int d) {
         if (d == 0) return "D-Day";
         return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
-    }
-
-    public void deleteSchedule(Long scheduleId, CustomOAuth2User userDetails) {
-        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
-                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
-
-        TravelSchedule schedule = scheduleRepository.findByIdAndUserId(scheduleId, user.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Schedule Not Found"));
-
-        scheduleRepository.delete(schedule);
     }
 }
