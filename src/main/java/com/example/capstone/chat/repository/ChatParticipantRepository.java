@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public interface ChatParticipantRepository extends JpaRepository<ChatParticipant, Long>, ChatParticipantRepositoryCustom {
     List<ChatParticipant> findByChatRoom(ChatRoom chatRoom);
-    List<ChatParticipant> findByUser(UserEntity user);
     Optional<ChatParticipant> findByUserAndChatRoom(UserEntity user, ChatRoom chatRoom);
+    List<ChatParticipant> findByUserAndIsDeletedFalseOrderByChatRoomUpdatedTimeDesc(UserEntity user);
+
 }

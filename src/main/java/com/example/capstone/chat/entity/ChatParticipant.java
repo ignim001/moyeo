@@ -25,4 +25,11 @@ public class ChatParticipant extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
+    public void leave() {
+        this.isDeleted = true;
+    }
 }

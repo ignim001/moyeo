@@ -4,7 +4,7 @@ import com.example.capstone.user.entity.Gender;
 import com.example.capstone.user.entity.MBTI;
 import lombok.*;
 
-@Getter
+@Data
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

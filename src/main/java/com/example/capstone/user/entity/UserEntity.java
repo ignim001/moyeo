@@ -47,11 +47,21 @@ public class UserEntity extends BaseTimeEntity {
     @Column(nullable = false)
     private String profileImageUrl;
 
+
     public void updateProfile(String nickname, Gender gender, int age, MBTI mbti, String profileImageUrl) {
         this.nickname = nickname;
         this.gender = gender;
         this.age = age;
         this.mbti = mbti;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    // 리스트 조회시 상대방 사용자가 회원 탈퇴시 사용할 정보
+    public static UserEntity deletedUserPlaceholder() {
+        return UserEntity.builder()
+                .id(-1L)
+                .nickname("알 수 없음") // 또는 "탈퇴한 사용자"
+                .profileImageUrl("default-profile.png") // 기본 이미지 경로
+                .build();
     }
 }

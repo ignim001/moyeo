@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Service
@@ -83,25 +84,44 @@ public class ChatService {
                 .unReadUserCount(readStatuses.stream()
                         .filter(rs -> !rs.getIsRead())
                         .count())
-                .timestamp(chatMessage.getCreatedTime())
+                .timestamp(chatMessage.getCreatedTime().atOffset(ZoneOffset.ofHours(9)))
                 .build();
     }
 
     // 자신이 속한 채팅방 조회
     @Transactional(readOnly = true)
     public List<MyChatRoomListResDto> getMyRoom(CustomOAuth2User userDetails) {
-        UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
+        UserEntity currentUser = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
 
-        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserOrderByChatRoomUpdatedTimeDesc(user);
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByUserAndIsDeletedFalseOrderByChatRoomUpdatedTimeDesc(currentUser);
+
+        List<ChatRoom> chatRooms = chatParticipants.stream()
+                .map(ChatParticipant::getChatRoom)
+                .toList();
+
+        Map<Long, Long> unreadCountMap = readStatusRepository.countUnreadByChatRoomsAndUser(chatRooms, currentUser);
 
         return chatParticipants.stream()
-                .map(c -> MyChatRoomListResDto.builder()
-                        .roomId(c.getChatRoom().getId())
-                        .otherUserNickname(c.getChatRoom().getRoomName())
-                        .unReadCount(readStatusRepository.countByChatRoomAndUserAndIsReadFalse(c.getChatRoom(), user)) // N + 1 문제
-                        .otherUserImageUrl(c.getChatRoom().getRoomImage())
-                        .build())
+                .map(c -> {
+                    ChatRoom chatRoom = c.getChatRoom();
+
+                    // 현재 유저를 제외한 상대방 찾기
+                    UserEntity otherUser = chatRoom.getChatParticipants().stream()
+                            .map(ChatParticipant::getUser)
+                            .filter(user -> !user.getId().equals(currentUser.getId()))
+                            .findFirst()
+                            .orElse(UserEntity.deletedUserPlaceholder()); // 또는 null-safe 처리
+
+                    long unreadCount = unreadCountMap.getOrDefault(chatRoom.getId(), 0L);
+
+                    return MyChatRoomListResDto.builder()
+                            .roomId(chatRoom.getId())
+                            .otherUserNickname(otherUser.getNickname())
+                            .otherUserImageUrl(otherUser.getProfileImageUrl())
+                            .unReadCount(unreadCount)
+                            .build();
+                })
                 .toList();
     }
 
@@ -120,8 +140,6 @@ public class ChatService {
         }
 
         ChatRoom newRoom = ChatRoom.builder()
-                .roomName(otherUserNickname)
-                .roomImage(otherUser.getProfileImageUrl())
                 .build();
 
         chatRoomRepository.save(newRoom);
@@ -135,6 +153,7 @@ public class ChatService {
         ChatParticipant chatParticipant = ChatParticipant.builder()
                 .chatRoom(chatRoom)
                 .user(user)
+                .isDeleted(false)
                 .build();
         chatParticipantRepository.save(chatParticipant);
     }
@@ -150,11 +169,13 @@ public class ChatService {
 
         ChatParticipant chatParticipant = chatParticipantRepository.findByUserAndChatRoom(user, chatRoom)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ChatParticipant not found"));
-        chatParticipantRepository.delete(chatParticipant);
 
-        // 모든 참여자가 나간경우 채팅방 삭제
+        chatParticipant.leave();
+
+        // 모든 유저가 나갔는지 확인
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
-        if (chatParticipants.isEmpty()) {
+        boolean allLeft = chatParticipants.stream().allMatch(ChatParticipant::getIsDeleted);
+        if (allLeft) {
             chatRoomRepository.delete(chatRoom);
         }
     }
@@ -184,7 +205,7 @@ public class ChatService {
                         .unReadUserCount(m.getReadStatuses().stream()
                                 .filter(rs -> !rs.getIsRead())
                                 .count())
-                        .timestamp(m.getCreatedTime())
+                        .timestamp(m.getCreatedTime().atOffset(ZoneOffset.ofHours(9)))
                         .build())
                 .toList();
     }

@@ -30,17 +30,18 @@ public class ChatRoom {
     @OneToMany(mappedBy = "chatRoom", orphanRemoval = true, cascade = CascadeType.REMOVE)
     private List<ChatParticipant> chatParticipants = new ArrayList<>();
 
-    @Column(nullable = false)
-    private String roomName;
-
-    @Column(nullable = false)
-    private String roomImage;
-
     @CreationTimestamp
     private LocalDateTime createdTime;
+    @UpdateTimestamp
     private LocalDateTime updatedTime;
 
     public void updateChatRoom(LocalDateTime updateTime) {
         this.updatedTime = updateTime;
     }
+
+//    @Column(nullable = false)
+//    private String roomName;
+//
+//    @Column(nullable = false)
+//    private String roomImage;
 }
