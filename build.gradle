@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.1'
     id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 group = 'com.example'
@@ -29,6 +30,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebClient 사용
+    implementation 'com.fasterxml.jackson.core:jackson-databind' // JSON 파싱
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -51,6 +54,7 @@ dependencies {
 
     // WebSocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 // Querydsl 빌드 옵션 설정

@@ -1,9 +1,12 @@
 package com.example.capstone.user.entity;
 
 import com.example.capstone.matching.entity.MatchingProfile;
+import com.example.capstone.plan.entity.TravelSchedule;
 import com.example.capstone.util.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -17,6 +20,9 @@ public class UserEntity extends BaseTimeEntity {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private MatchingProfile matchingProfile;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TravelSchedule> travelSchedules;
 
     // 사용자 식별자 (kakao + provider id)
     @Column(nullable = false)

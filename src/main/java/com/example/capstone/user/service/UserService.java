@@ -102,6 +102,8 @@ public class UserService {
         userRepository.save(user);
     }
 
+
+
     private boolean isDefaultImage(String imageUrl) {
         return DEFAULT_PROFILE_IMAGE_URL.equals(imageUrl);
     }

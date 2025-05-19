@@ -20,6 +20,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private Long userId;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -56,5 +57,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .tempToken(tempToken)
                 .build());
     }
+
+
 }
 

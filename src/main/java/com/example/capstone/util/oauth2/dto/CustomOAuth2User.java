@@ -38,4 +38,7 @@ public class CustomOAuth2User implements OAuth2User {
     public String getTempToken() {return oAuth2DTO.getTempToken();}
 
     public String getNickname() {return oAuth2DTO.getNickname();}
+
+    public Long getUserId() {return oAuth2DTO.getUserId();}
+
 }
