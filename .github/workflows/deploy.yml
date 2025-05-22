@@ -76,6 +76,6 @@ jobs:
             
             cd /home/ubuntu/app
             echo "$ENV" > /home/ubuntu/app/.env
-            docker-compose down
-            docker-compose pull
-            docker-compose up -d --build
+            docker compose down
+            docker compose pull
+            docker compose up -d --build
