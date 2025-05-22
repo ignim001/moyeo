@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  Deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -46,8 +46,36 @@ jobs:
           docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: compose.yml 파일 전송
-        uses:
-            
+      - name: compose.yml EC2로 전송
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/ubuntu/app"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
       - name: EC2 배포
-        uses:
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ENV: ${{ secrets.ENV }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          envs: ENV, AWS_ACCOUNT_ID
+          script_stop: true
+          script: |
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID".dkr.ecr.ap-northeast-2.amazonaws.com
+            
+            cd /home/ubuntu/app
+            echo "$ENV" > /home/ubuntu/app/.env
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d --build
