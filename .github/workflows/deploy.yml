@@ -75,7 +75,8 @@ jobs:
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID".dkr.ecr.ap-northeast-2.amazonaws.com
             
             cd /home/ubuntu/app
-            echo "$ENV" > /home/ubuntu/app/.env
+            rm -rf .env
+            echo "$ENV" > .env 
             docker compose down
             docker compose pull
             docker compose up -d --build
