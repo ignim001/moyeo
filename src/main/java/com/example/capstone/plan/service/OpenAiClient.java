@@ -20,11 +20,10 @@ public class OpenAiClient {
     private String apiKey;
 
     private final ObjectMapper objectMapper;
-    private WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
-    // 생성자에서 WebClient 초기화
-    public void initialize() {
-        this.webClient = WebClient.builder()
+    private WebClient getWebClient() {
+        return webClientBuilder
                 .baseUrl("https://api.openai.com/v1")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -32,10 +31,6 @@ public class OpenAiClient {
     }
 
     public String callGpt(String prompt) {
-        if (webClient == null) {
-            initialize(); // 처음 요청 시 초기화
-        }
-
         try {
             String requestBody = objectMapper.writeValueAsString(
                     Map.of(
@@ -46,7 +41,8 @@ public class OpenAiClient {
                     )
             );
 
-            String responseBody = webClient.post()
+            String responseBody = getWebClient()
+                    .post()
                     .uri("/chat/completions")
                     .bodyValue(requestBody)
                     .retrieve()

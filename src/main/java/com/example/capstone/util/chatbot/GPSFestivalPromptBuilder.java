@@ -15,13 +15,17 @@ public class GPSFestivalPromptBuilder {
             - name: 축제명
             - period: 기간
             - location: 장소
-            - content: 주요 행사 내용
+            - highlight: 주요 행사 내용
             - fee: 입장료 여부 (예: 무료, 10000원)
 
             조건:
             - KakaoMap에서 실제 존재하는 장소 기준으로 알려줘
             - 출력은 JSON 배열로만 해줘, 다른 설명이나 코드 블럭(예: ```json)은 포함하지 마.
             - 행사 수는 정확히 3개
+            절대 아래 사항을 지켜야 합니다:
+            - JSON을 반드시 `{` 로 시작하고 `}` 로 끝나는 순수 JSON만 반환하세요.
+            - 절대로 마크다운(```) 또는 코드블럭을 사용하지 마세요.
+            - 설명 문장, 텍스트, 줄바꿈 없이 JSON만 응답하세요.
         """, latitude, longitude);
     }
 }

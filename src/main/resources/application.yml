@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: prod  # local 또는 prod 선택
+    active: local  # local 또는 prod 선택
 
   security:
     oauth2:
@@ -110,3 +110,7 @@ openai:
 kakao:
   api:
     key: ${KAKAO_API_KEY}
+
+openweather:
+  api:
+    key: ${OPENWEATHER_API_KEY}

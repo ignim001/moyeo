@@ -1,12 +1,14 @@
-package com.example.capstone.chatbot.dto;
+package com.example.capstone.chatbot.dto.request;
 
 import com.example.capstone.chatbot.entity.ChatCategory;
 import lombok.Data;
 
+import java.util.List;
 
 @Data
-public class ChatBotGpsReq {
+public class ChatBotGpsRecreateReqDto {
     private ChatCategory category;  // 예: SPOT, FOOD, HOTEL, FESTIVAL, WEATHER
     private double latitude;        // 사용자 GPS 위도
     private double longitude;       // 사용자 GPS 경도
+    private List<String> excludedNames;
 }

@@ -1,30 +1,53 @@
 package com.example.capstone.util.chatbot;
 
-import com.example.capstone.plan.entity.City;
+import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import org.springframework.stereotype.Component;
 
 @Component
 public class HotelPromptBuilder {
 
-    public String build(City city) {
+    public String build(KakaoPlaceDto place) {
         return String.format("""
-            너는 대한민국 숙소 전문가야.
+            다음은 실제 대한민국에 존재하는 숙소(호텔, 게스트하우스 등)의 정보입니다.
 
-            [%s] 지역에서 여행자에게 추천할만한 숙소 3곳을 아래 정보와 함께 알려줘.
+            - 숙소명: %s
+            - 주소: %s
+            - 전화번호: %s (없다면 빈 문자열로 표시)
+            - 카테고리 코드: %s
+            - 위도: %f
+            - 경도: %f
 
-            각 숙소에 대해 JSON 형식으로 제공해줘:
+            아래의 모든 항목을 포함하여 다음 JSON 형식으로만 응답하세요:
+                - JSON 외의 설명, 마크다운, 코드블럭, 텍스트 모두 금지
+                - 아래 키를 모두 포함해야 하며, 누락 시 오류
+                - 모든 필드는 문자열(String)로 작성
+                - 값은 실제 정보를 바탕으로 구체적으로 추정
+            
+                반드시 아래 JSON 형식 그대로 응답하세요:
 
-            - name: 숙소명
-            - priceRange: 가격대 (1박 기준, 예: 90,000원 ~ 120,000원)
-            - address: 주소
-            - phone: 연락처 (없으면 null)
-            - checkIn: 체크인 시간
-            - checkOut: 체크아웃 시간
+            {
+              "name": "%s",
+              "priceRange": "1박 가격대 (예: 90,000원 ~ 120,000원)",
+              "address": "%s",
+              "phone": "%s (없다면 빈 문자열로 표시)",
+              "checkIn": "체크인 시간 (예: 15:00)",
+              "checkOut": "체크아웃 시간 (예: 11:00)"
+            }
 
-            조건:
-            - KakaoMap 기준 실제 숙소만 추천해야 함
-            - 출력은 JSON 배열로만 해줘, 설명 없이
-            - 장소 수는 정확히 3개
-        """, city.getDisplayName());
+            ⚠️ 반드시 위 JSON 형식 그대로 응답해야 하며, 다음을 절대 포함하지 마세요:
+            - 마크다운(```)
+            - 설명 문장
+            - 기타 안내 문구
+
+            단순 JSON 객체 하나만 반환하세요.
+            """, place.getPlaceName(),
+                place.getAddress(),
+                place.getPhone() == null ? "" : place.getPhone(),
+                place.getCategoryGroupCode(),
+                place.getLatitude(),
+                place.getLongitude(),
+                place.getPlaceName(),
+                place.getAddress(),
+                place.getPhone() == null ? "" : place.getPhone());
     }
 }

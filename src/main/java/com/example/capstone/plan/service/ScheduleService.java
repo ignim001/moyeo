@@ -25,8 +25,11 @@ import com.example.capstone.util.gpt.GptRecreatePromptBuilder;
 import com.example.capstone.util.gpt.GptScheduleStructurePromptBuilder;
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -49,6 +52,8 @@ public class ScheduleService {
     private final DayRepository dayRepository;
     private final PlaceRepository placeRepository;
     private final UserRepository userRepository;
+
+
 
     public FullScheduleResDto generateFullSchedule(ScheduleCreateReqDto request) throws Exception {
         String schedulePrompt = structurePromptBuilder.build(request);
@@ -306,4 +311,5 @@ public class ScheduleService {
         if (d == 0) return "D-Day";
         return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
     }
+
 }

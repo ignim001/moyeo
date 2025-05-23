@@ -1,6 +1,5 @@
 package com.example.capstone.chatbot.service;
 
-import com.example.capstone.chatbot.dto.*;
 import com.example.capstone.chatbot.dto.response.*;
 import com.example.capstone.chatbot.entity.ChatCategory;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,7 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class chatbotservice {
+public class ChatBotParseService {
 
     private final ObjectMapper objectMapper;
 

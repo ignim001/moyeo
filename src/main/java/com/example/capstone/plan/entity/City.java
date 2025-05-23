@@ -1,5 +1,7 @@
 package com.example.capstone.plan.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum City {
     NONE("국내"),
     GANGNAM_GU("강남구"),
@@ -113,4 +115,14 @@ public enum City {
     public String getDisplayName() {
         return displayName;
     }
+    @JsonCreator
+    public static City from(String input) {
+        for (City c : City.values()) {
+            if (c.name().equalsIgnoreCase(input) || c.getDisplayName().equals(input)) {
+                return c;
+            }
+        }
+        throw new IllegalArgumentException("Unknown city: " + input);
+    }
 }
+

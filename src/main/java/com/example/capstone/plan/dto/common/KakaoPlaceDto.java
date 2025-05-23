@@ -11,5 +11,6 @@ public class KakaoPlaceDto {
     private double latitude;
     private double longitude;
     private String address;
+    private String phone;
     private String categoryGroupCode;
 }
