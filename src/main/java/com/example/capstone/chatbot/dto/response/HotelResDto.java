@@ -1,7 +1,5 @@
 package com.example.capstone.chatbot.dto.response;
 
-import com.example.capstone.chatbot.dto.detail.HotelDetailDto;
-import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import lombok.*;
 
 @Data
