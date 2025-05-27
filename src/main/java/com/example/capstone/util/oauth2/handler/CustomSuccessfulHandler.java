@@ -32,9 +32,11 @@ public class CustomSuccessfulHandler extends SimpleUrlAuthenticationSuccessHandl
 
         // 신규, 기존 사용자 구분해 redirect
         if (oAuth2User.getTempToken() != null) {
+            log.info("test token {}", oAuth2User.getTempToken());
             response.sendRedirect(redirectUri + "?mode=register&token=" + oAuth2User.getTempToken());
         } else {
             String jwtToken = jwtUtil.generateToken(oAuth2User.getProviderId(), oAuth2User.getEmail(), oAuth2User.getNickname());
+            log.info("test token {}", jwtToken);
             response.sendRedirect(redirectUri + "?mode=login&token=" + jwtToken);
         }
     }
