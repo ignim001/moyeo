@@ -9,6 +9,6 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long>, PostRepositoryCustom {
     Optional<Post> findByUserIdAndId(Long user_id, Long id);
     @Override
-    @EntityGraph(attributePaths = "userEntity")
+    @EntityGraph(attributePaths = "user")
     Optional<Post> findById(Long aLong);
 }

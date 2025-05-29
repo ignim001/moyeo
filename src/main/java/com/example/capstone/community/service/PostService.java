@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostService {
 
     private final UserRepository userRepository;
@@ -130,18 +132,13 @@ public class PostService {
         Slice<Post> postList = postRepository.findAll(pageable);
 
         List<PostListResDto> postListResDto = postList.stream()
-                .map(post -> {
-                    try {
-                        return PostListResDto.builder()
-                                .title(post.getTitle())
-                                .nickname(post.getUser().getNickname())
-                                .createdAt(post.getCreatedTime())
-                                .countComment(post.getComments().size()) // N + 1 문제 발생가능
-                                .firstImage(getFirstImage(post.getImageUris()))
-                                .build();
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }})
+                .map(post -> PostListResDto.builder()
+                        .title(post.getTitle())
+                        .nickname(post.getUser().getNickname())
+                        .createdAt(post.getCreatedTime())
+                        .countComment(post.getComments().size()) // N + 1 문제 발생가능
+                        .firstImage(post.getImageUris())
+                        .build())
                 .toList();
 
         return PagingPostListResDto.builder()
@@ -162,11 +159,4 @@ public class PostService {
                 .build();
     }
 
-    private String getFirstImage(String imageUris) throws JsonProcessingException {
-        if (imageUris == null || imageUris.isEmpty()) {
-            return null;
-        }
-        List<String> imageUriList = objectMapper.readValue(imageUris, new TypeReference<>() {});
-        return imageUriList.get(0);
-    }
 }

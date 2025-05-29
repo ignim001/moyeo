@@ -9,6 +9,6 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     Optional<Comment> findByIdAndUserId(Long commentId, Long id);
-    @EntityGraph(attributePaths = "userEntity")
+    @EntityGraph(attributePaths = "user")
     Optional<List<Comment>> findByPostIdOrderByCreatedTimeAsc(Long postId);
 }

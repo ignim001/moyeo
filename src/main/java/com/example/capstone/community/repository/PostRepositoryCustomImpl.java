@@ -3,6 +3,8 @@ package com.example.capstone.community.repository;
 import com.example.capstone.community.dto.PostListResDto;
 import com.example.capstone.matching.entity.City;
 import com.example.capstone.matching.entity.Province;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
