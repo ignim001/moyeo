@@ -68,6 +68,10 @@ spring:
   config:
     activate:
       on-profile: local
+  jackson:
+    date-format: yyyy-MM-dd
+    serialization:
+      write-dates-as-timestamps: false
 
   datasource:
     url: jdbc:h2:tcp://localhost/~/moyeo
@@ -114,3 +118,6 @@ kakao:
 openweather:
   api:
     key: ${OPENWEATHER_API_KEY}
+
+tourapi:
+  key: ${TOURAPI_KEY}

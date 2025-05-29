@@ -23,6 +23,7 @@ public class ChatBotParseService {
             case FESTIVAL -> parse(gptResponse, new TypeReference<List<FestivalResDto>>() {});
             case WEATHER -> parse(gptResponse, new TypeReference<WeatherResDto>() {});
         };
+
     }
 
     private <T> T parse(String json, TypeReference<T> typeRef) throws Exception {

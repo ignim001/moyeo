@@ -29,6 +29,34 @@ public class KakaoMapClient {
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + kakaoApiKey)
                 .build();
     }
+    //  위도경도 → City enum
+    public City getCityFromLatLng(double lat, double lng) {
+        try {
+            String response = getWebClient().get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v2/local/geo/coord2regioncode.json")
+                            .queryParam("x", lng)
+                            .queryParam("y", lat)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            JsonNode documents = objectMapper.readTree(response).get("documents");
+            if (documents != null && documents.size() > 0) {
+                String region2 = documents.get(0).path("region_2depth_name").asText();
+
+                for (City city : City.values()) {
+                    if (region2.contains(city.getDisplayName())) {
+                        return city;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("KakaoMap 좌표 → City 변환 실패", e);
+        }
+        throw new RuntimeException("좌표에 대응하는 City를 찾을 수 없습니다");
+    }
 
     // GPT 장소 정제용 (단일 결과)
     public KakaoPlaceDto searchPlaceFromGpt(String gptName, String locationName, String categoryCode) {

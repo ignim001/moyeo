@@ -10,9 +10,11 @@ import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import com.example.capstone.plan.service.KakaoMapClient;
 import com.example.capstone.plan.service.OpenAiClient;
 import com.example.capstone.util.chatbot.recreate.*;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,33 +24,11 @@ public class DestinationChatRecreateService {
     private final OpenAiClient openAiClient;
     private final ChatBotParseService parseService;
     private final KakaoMapClient kakaoMapClient;
+    private final TourApiClient tourApiClient;
 
-    private final SpotRecreatePromptBuilder spotRecreatePromptBuilder;
-    private final FestivalRecreatePromptBuilder festivalRecreatePromptBuilder;
     private final FoodRecreatePromptBuilder foodRecreatePromptBuilder;
     private final HotelRecreatePromptBuilder hotelRecreatePromptBuilder;
-
-    public List<SpotResDto> recreateSpot(ChatBotRecreateReqDto req) {
-        try {
-            String prompt = spotRecreatePromptBuilder.build(req.getCity(), req.getExcludedNames());
-            String response = openAiClient.callGpt(prompt);
-            return (List<SpotResDto>) parseService.parseResponse(ChatCategory.SPOT, response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("SPOT 재조회 실패", e);
-        }
-    }
-
-    public List<FestivalResDto> recreateFestival(ChatBotRecreateReqDto req) {
-        try {
-            String prompt = festivalRecreatePromptBuilder.build(req.getCity(), req.getExcludedNames());
-            String response = openAiClient.callGpt(prompt);
-            return (List<FestivalResDto>) parseService.parseResponse(ChatCategory.FESTIVAL, response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("FESTIVAL 재조회 실패", e);
-        }
-    }
+    private final FestivalRecreatePromptBuilder festivalRecreatePromptBuilder;
 
 
     public List<FoodResDto> recreateFood(ChatBotRecreateReqDto req) {
@@ -87,5 +67,24 @@ public class DestinationChatRecreateService {
                     }
                 })
                 .toList();
+    }
+    public List<FestivalResDto> recreateFestival(ChatBotRecreateReqDto req) {
+        try {
+            // 1. 필터링된 축제 목록 가져오기
+            JsonNode filteredJson = tourApiClient.getFestivalListByCityExcluding(
+                    req.getCity(),
+                    LocalDate.now(),
+                    req.getExcludedNames()
+            );
+
+            // 2. 프롬프트 생성 및 GPT 호출
+            String prompt = festivalRecreatePromptBuilder.build(filteredJson);
+            String gptResponse = openAiClient.callGpt(prompt);
+
+            // 3. 응답 파싱
+            return (List<FestivalResDto>) parseService.parseResponse(ChatCategory.FESTIVAL, gptResponse);
+        } catch (Exception e) {
+            throw new RuntimeException("축제 재조회 GPT 파싱 실패", e);
+        }
     }
 }

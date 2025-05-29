@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -51,12 +53,25 @@ public class OpenWeatherClient {
             double maxTemp = body.get("daily").get(0).get("temp").get("max").asDouble();
             double pop = body.get("daily").get(0).get("pop").asDouble() * 100;
 
+            // ⛅ 날씨 설명
+            String weatherDescription = body.get("current")
+                    .get("weather")
+                    .get(0)
+                    .get("description")
+                    .asText();  // 예: "흐림", "맑음", "가벼운 비"
+
+            // ⏰ 요청 시간
+            String requestTime = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+
             return new WeatherResDto(
                     regionName,
                     String.format("%.1f°C", currentTemp),
                     String.format("%.1f°C", minTemp),
                     String.format("%.1f°C", maxTemp),
-                    String.format("%.0f%%", pop)
+                    String.format("%.0f%%", pop),
+                    weatherDescription,
+                    requestTime
             );
 
         } catch (Exception e) {

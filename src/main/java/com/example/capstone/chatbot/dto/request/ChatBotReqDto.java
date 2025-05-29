@@ -2,11 +2,10 @@ package com.example.capstone.chatbot.dto.request;
 
 import com.example.capstone.chatbot.entity.ChatCategory;
 import com.example.capstone.plan.entity.City;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+
+@Data
 public class ChatBotReqDto {
     private City city;
     private ChatCategory category;

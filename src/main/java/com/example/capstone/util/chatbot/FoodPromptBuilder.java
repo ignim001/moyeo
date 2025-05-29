@@ -30,10 +30,10 @@ public class FoodPromptBuilder {
 
             {
               "name": "%s",
-              "menu": "고기국수, 비빔국수", 
-              "priceRange": "9,000원 ~ 12,000원",
+              "menu": "", 
+              "priceRange": "",
               "location": "%s",
-              "hours": "매일 10:00~20:00"
+              "hours": ""
             }
         ⚠️ 반드시 위 JSON 형식 그대로 응답해야 하며, 다음을 절대 포함하지 마세요:
         - 마크다운(```)
