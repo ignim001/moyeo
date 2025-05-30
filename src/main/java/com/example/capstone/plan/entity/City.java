@@ -124,6 +124,27 @@ public enum City {
     SACHEON_SI("사천시", 38, 7),
     NAMHAE_GUN("남해군", 38, 8),
 
+    // 대전광역시
+    DAEJEON_DONG_GU("동구", 3, 1),
+    DAEJEON_YUSEONG_GU("유성구", 3, 5),
+
+    // 대구광역시
+    DAEGU_JUNG_GU("중구", 4, 1),
+    DAEGU_DALSEO_GU("달서구", 4, 7),
+
+    // 인천광역시
+    INCHEON_NAMDONG_GU("남동구", 2, 6),
+    INCHEON_BUPYEONG_GU("부평구", 2, 4),
+
+    // 울산광역시
+    ULSAN_NAMGU("남구", 7, 3),
+    ULSAN_DONGGU("동구", 7, 5),
+
+    // 부산광역시
+    BUSAN_HAEUNDAE_GU("해운대구", 6, 1),
+    BUSAN_SUYEONG_GU("수영구", 6, 2),
+    BUSAN_SASANG_GU("사상구", 6, 3),
+
     // 기본값
     NONE("국내", 0, 0);
 

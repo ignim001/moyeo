@@ -6,10 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Component
 @RequiredArgsConstructor
@@ -53,14 +54,17 @@ public class OpenWeatherClient {
             double maxTemp = body.get("daily").get(0).get("temp").get("max").asDouble();
             double pop = body.get("daily").get(0).get("pop").asDouble() * 100;
 
-            // ⛅ 날씨 설명
-            String weatherDescription = body.get("current")
+            // 원본 날씨 설명
+            String rawDescription = body.get("current")
                     .get("weather")
                     .get(0)
                     .get("description")
-                    .asText();  // 예: "흐림", "맑음", "가벼운 비"
+                    .asText();
 
-            // ⏰ 요청 시간
+            // 간소화된 날씨 설명
+            String simplifiedDescription = simplifyWeatherDescription(rawDescription);
+
+            // 요청 시간
             String requestTime = LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
@@ -70,12 +74,21 @@ public class OpenWeatherClient {
                     String.format("%.1f°C", minTemp),
                     String.format("%.1f°C", maxTemp),
                     String.format("%.0f%%", pop),
-                    weatherDescription,
+                    simplifiedDescription,
                     requestTime
             );
 
         } catch (Exception e) {
             throw new RuntimeException("OpenWeather API 응답 처리 중 오류", e);
         }
+    }
+
+    // 날씨 설명 간소화: 맑음, 구름, 비, 눈
+    private String simplifyWeatherDescription(String description) {
+        if (description.contains("구름") || description.contains("흐림")) return "구름";
+        if (description.contains("비")) return "비";
+        if (description.contains("눈")) return "눈";
+        if (description.contains("맑")) return "맑음";
+        return "기타";
     }
 }
