@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: prod  # local 또는 prod 선택
+    active: local  # local 또는 prod 선택
 
   security:
     oauth2:
@@ -68,6 +68,10 @@ spring:
   config:
     activate:
       on-profile: local
+  jackson:
+    date-format: yyyy-MM-dd
+    serialization:
+      write-dates-as-timestamps: false
 
   datasource:
     url: jdbc:h2:tcp://localhost/~/moyeo
@@ -110,3 +114,10 @@ openai:
 kakao:
   api:
     key: ${KAKAO_API_KEY}
+
+openweather:
+  api:
+    key: ${OPENWEATHER_API_KEY}
+
+tourapi:
+  key: ${TOURAPI_KEY}

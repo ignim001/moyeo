@@ -1,29 +1,54 @@
 package com.example.capstone.util.chatbot;
 
-import com.example.capstone.plan.entity.City;
+import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FoodPromptBuilder {
 
-    public String build(City city) {
+    public String build(KakaoPlaceDto place) {
         return String.format("""
-            너는 대한민국 미식가 여행 전문가야.
-                
-          [%s] 지역에서 여행자에게 추천할만한 맛집 또는 카페 3곳을 아래 정보와 함께 알려줘.
+            다음은 실제 존재하는 식당 정보입니다.
 
-          각 장소에 대해 JSON 형식으로 제공해줘:
+            - 상호명: %s
+            - 주소: %s
+            - 전화번호: %s
+            - 카테고리 코드: %s
+            - 위도: %f
+            - 경도: %f
 
-          - name: 상호명
-          - menu: 대표 메뉴 (1개)
-          - priceRange: 가격대 (예: 10,000원 ~ 15,000원)
-          - location: 주소
-          - hours: 영업시간
+            이 식당의 다음 정보를 알려줘:
+            1. 대표 메뉴 (고유 메뉴 1~2개)
+            2. 1인당 가격대 (예: 9,000원 ~ 12,000원)
+            3. 영업시간 (정기적인 요일별 패턴)
 
-          조건:
-          - 반드시 KakaoMap에서 실제 존재하는 상호명을 사용해야 함
-          - 출력은 JSON 배열로만 해줘, 설명 없이
-          - 장소 수는 정확히 3개
-        """, city.getDisplayName());
+            반드시 지켜야 할 조건:
+            - JSON 외 어떤 문장도 포함하지 마세요 (마크다운, 코드블럭, 안내문 등 모두 금지)
+            - 응답은 아래 JSON 형식으로 정확히 구성해야 합니다.
+            - 각 필드는 반드시 값이 있어야 하며, null 또는 빈 문자열 금지
+            - 모든 정보는 최대한 구체적으로 작성하세요
+
+            {
+              "name": "%s",
+              "menu": "", 
+              "priceRange": "",
+              "location": "%s",
+              "hours": ""
+            }
+        ⚠️ 반드시 위 JSON 형식 그대로 응답해야 하며, 다음을 절대 포함하지 마세요:
+        - 마크다운(```)
+        - 설명 문장
+        - 기타 안내 문구
+
+        단순 JSON 객체 하나만 반환하세요.
+        """,    place.getPlaceName(),
+                place.getAddress(),
+                place.getPhone() == null ? "정보 없음" : place.getPhone(),
+                place.getCategoryGroupCode(),
+                place.getLatitude(),
+                place.getLongitude(),
+                place.getPlaceName(),
+                place.getAddress()
+        );
     }
 }

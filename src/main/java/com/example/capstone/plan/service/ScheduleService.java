@@ -307,7 +307,6 @@ public class ScheduleService {
         if (d == 0) return "D-Day";
         return (d > 0) ? "D-" + d : "D+" + Math.abs(d);
     }
-
     public void deleteSchedule(Long scheduleId, CustomOAuth2User userDetails) {
         UserEntity user = userRepository.findByProviderId(userDetails.getProviderId())
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));

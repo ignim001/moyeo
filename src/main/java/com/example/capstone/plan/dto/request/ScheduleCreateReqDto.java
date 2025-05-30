@@ -5,7 +5,7 @@ import com.example.capstone.user.entity.MBTI;
 import com.example.capstone.plan.entity.PeopleGroup;
 import com.example.capstone.matching.entity.TravelStyle;
 import lombok.*;
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 
 @Data
