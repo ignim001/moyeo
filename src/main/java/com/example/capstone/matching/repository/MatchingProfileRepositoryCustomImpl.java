@@ -14,7 +14,6 @@ import static com.example.capstone.matching.entity.QMatchCity.matchCity;
 import static com.example.capstone.matching.entity.QMatchTravelStyle.matchTravelStyle;
 import static com.example.capstone.matching.entity.QMatchingProfile.matchingProfile;
 import static com.example.capstone.user.entity.QUserEntity.userEntity;
-import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @RequiredArgsConstructor

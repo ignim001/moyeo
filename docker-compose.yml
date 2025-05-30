@@ -1,0 +1,13 @@
+    services:
+      spring-server:
+        container_name: spring-server
+        image: 430118823048.dkr.ecr.ap-northeast-2.amazonaws.com/moyeo:latest
+        env_file:
+          - .env
+        ports:
+          - 8080:8080
+
+
+
+
+

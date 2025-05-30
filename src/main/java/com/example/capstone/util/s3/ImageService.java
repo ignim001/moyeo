@@ -11,6 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Service
@@ -42,8 +45,17 @@ public class ImageService {
     }
 
     public void deleteImage(String imageUrl) {
-        String fileKey = imageUrl.substring(imageUrl.indexOf(".com/") + 5);
-        amazonS3Client.deleteObject(new DeleteObjectRequest(bucketName, fileKey));
+        try {
+            URI uri = new URI(imageUrl);
+            String rawPath = uri.getPath();
+            String fileKey = rawPath.startsWith("/") ? rawPath.substring(1) : rawPath;
+
+            // URL 디코딩 (한글 파일 이름 지원)
+            fileKey = URLDecoder.decode(fileKey, StandardCharsets.UTF_8.name());
+            amazonS3Client.deleteObject(new DeleteObjectRequest(bucketName, fileKey));
+        } catch (Exception e) {
+            System.err.println("삭제 실패: " + e.getMessage());
+        }
     }
 }
 

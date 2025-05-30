@@ -1,11 +1,14 @@
 package com.example.capstone.user.entity;
 
+import com.example.capstone.community.entity.Comment;
+import com.example.capstone.community.entity.Post;
 import com.example.capstone.matching.entity.MatchingProfile;
 import com.example.capstone.plan.entity.TravelSchedule;
 import com.example.capstone.util.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,7 +25,13 @@ public class UserEntity extends BaseTimeEntity {
     private MatchingProfile matchingProfile;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TravelSchedule> travelSchedules;
+    private List<TravelSchedule> travelSchedules = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments  = new ArrayList<>();
 
     // 사용자 식별자 (kakao + provider id)
     @Column(nullable = false)
