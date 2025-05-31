@@ -42,9 +42,7 @@ public class WebSecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
                                 "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/schedule/**",
-                                "/chatbot/**"
+                                "/swagger-ui.html"
                                 ).permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
