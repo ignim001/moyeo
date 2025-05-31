@@ -84,7 +84,7 @@ public class TourApiClient {
     public JsonNode getFestivalListByGpsExcluding(double lat, double lng, LocalDate today, List<String> excludedNames) {
         // 위도/경도를 City로 변환
         City city = kakaoMapClient.getCityFromLatLng(lat, lng);
-        JsonNode rawJson = getFestivalList(lat, lng, today);  // 이미 areaCode 포함
+        JsonNode rawJson = getFestivalList(lat, lng, today);
         JsonNode itemsNode = rawJson.at("/response/body/items/item");
         if (itemsNode.isMissingNode() || !itemsNode.isArray()) {
             throw new RuntimeException("TourAPI 축제 목록이 없습니다.");
