@@ -49,8 +49,14 @@ public class ScheduleEditService {
             String gptOriginalName = node.path("gptOriginalName").asText();
 
             KakaoPlaceDto kakao = kakaoMapClient.searchPlace(name);
+
             if (kakao == null) {
-                throw new IllegalStateException("KakaoMap 검색 실패: " + name);
+                continue;
+            }
+
+            String matchedName = kakao.getPlaceName();
+            if (!matchedName.contains(name) && !name.contains(matchedName)) {
+                continue;
             }
 
             PlaceResponse place = PlaceResponse.builder()
