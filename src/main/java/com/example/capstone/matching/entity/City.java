@@ -63,6 +63,7 @@ public enum City {
     YANGJU_SI,
     GWANGJU_SI,
     PAJU_SI,
+    GWANGMYEONG_SI,  // 추가
 
     // 강원도
     CHUNCHEON_SI,
@@ -77,6 +78,7 @@ public enum City {
     CHEONGJU_SI,
     CHUNGJU_SI,
     JECHEON_SI,
+    OKCHEON_GUN, // 추가
 
     // 충청남도
     CHEONAN_SI,
@@ -85,8 +87,9 @@ public enum City {
     DANGJIN_SI,
     NONSAN_SI,
     SEOSAN_SI,
-    BUYEo_GUN,
+    BUYEO_GUN, // 오타 수정
     HONGSEONG_GUN,
+    GYERYONG_SI, // 추가
 
     // 전라북도
     JEONJU_SI,
@@ -95,6 +98,7 @@ public enum City {
     NAMWON_SI,
     GIMJE_SI,
     SUNCHANG_GUN,
+    MUJU_GUN, // 추가
 
     // 전라남도
     MOKPO_SI,
@@ -102,6 +106,7 @@ public enum City {
     SUNCHEON_SI,
     GWANGYANG_SI,
     HAENAM_GUN,
+    JANGHEUNG_GUN, // 추가
 
     // 경상북도
     POHANG_SI,
@@ -114,6 +119,7 @@ public enum City {
     MUNGYEONG_SI,
     ULJIN_GUN,
     ULLEUNG_GUN,
+    GIMCHEON_SI, // 추가
 
     // 경상남도
     CHANGWON_SI,
@@ -123,7 +129,6 @@ public enum City {
     MIRYANG_SI,
     GEOJE_SI,
     SACHEON_SI,
-    NAMHAE_GUN;
-
+    NAMHAE_GUN,
+    CHANGNYEONG_GUN // 추가
 }
-
