@@ -86,6 +86,7 @@ public enum City {
     SEOSAN_SI("서산시", 34, 6),
     BUYEO_GUN("부여군", 34, 7),
     HONGSEONG_GUN("홍성군", 34, 8),
+    TAEAN_GUN("태안군", 34, 9),
 
     // 전라북도 (areaCode: 35)
     JEONJU_SI("전주시", 35, 1),
@@ -101,6 +102,7 @@ public enum City {
     SUNCHEON_SI("순천시", 36, 3),
     GWANGYANG_SI("광양시", 36, 4),
     HAENAM_GUN("해남군", 36, 5),
+    JANGHEUNG_GUN("장흥군", 36, 6),
 
     // 경상북도 (areaCode: 37)
     POHANG_SI("포항시", 37, 1),
