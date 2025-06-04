@@ -45,7 +45,7 @@ public class PostService {
 
         List<String> imageUriList = new ArrayList<>();
 
-        if(!postImages.isEmpty()) {
+        if(postImages != null && !postImages.isEmpty()) {
             for (MultipartFile postImage : postImages) {
                 String imageUri = imageService.imageUpload(postImage, POST_IMAGE_DIR);
                 imageUriList.add(imageUri);
@@ -133,6 +133,7 @@ public class PostService {
 
         List<PostListResDto> postListResDto = postList.stream()
                 .map(post -> PostListResDto.builder()
+                        .postId(post.getId())
                         .title(post.getTitle())
                         .nickname(post.getUser().getNickname())
                         .createdAt(post.getCreatedTime())
