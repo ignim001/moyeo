@@ -29,6 +29,7 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom{
         int pageSize = pageable.getPageSize();
         List<PostListResDto> result = queryFactory
                 .select(Projections.constructor(PostListResDto.class,
+                        post.id,
                         post.user.nickname,
                         post.title,
                         post.createdTime,

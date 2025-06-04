@@ -16,6 +16,7 @@ import java.util.List;
 @Builder
 public class PostListResDto {
 
+    private Long postId;
     private String nickname;
     private String title;
     private LocalDateTime createdAt;
@@ -24,7 +25,8 @@ public class PostListResDto {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public PostListResDto(String nickname, String title, LocalDateTime createdAt, int countComment, String imageJson) {
+    public PostListResDto(Long postId, String nickname, String title, LocalDateTime createdAt, int countComment, String imageJson) {
+        this.postId = postId;
         this.nickname = nickname;
         this.title = title;
         this.createdAt = createdAt;

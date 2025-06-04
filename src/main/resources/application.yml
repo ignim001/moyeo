@@ -5,8 +5,8 @@ spring:
   # 업로드 이미지 크기 설정
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 30MB
+      max-request-size: 30MB
 
   security:
     oauth2:
