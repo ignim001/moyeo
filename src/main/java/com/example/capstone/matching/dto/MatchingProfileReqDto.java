@@ -1,9 +1,6 @@
 package com.example.capstone.matching.dto;
 
-import com.example.capstone.matching.entity.City;
-import com.example.capstone.matching.entity.GroupType;
-import com.example.capstone.matching.entity.Province;
-import com.example.capstone.matching.entity.TravelStyle;
+import com.example.capstone.matching.entity.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -27,4 +24,5 @@ public class MatchingProfileReqDto {
     private GroupType groupType;
     private int ageRange;
     private List<TravelStyle> travelStyles;
+    private PreferenceGender preferenceGender;
 }

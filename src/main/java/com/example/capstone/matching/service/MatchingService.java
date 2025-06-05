@@ -42,14 +42,15 @@ public class MatchingService {
                     profileRequestDto.getEndDate(),
                     profileRequestDto.getProvince(),
                     profileRequestDto.getGroupType(),
-                    profileRequestDto.getAgeRange()
+                    profileRequestDto.getAgeRange(),
+                    profileRequestDto.getPreferenceGender()
             );
 
             // 기존 여행 성향 초기화 후 새로 추가
             profile.getTravelStyles().clear();
             profile.getMatchCities().clear();
-            updateTravelStyle(profileRequestDto, profile);
-            updateCity(profileRequestDto, profile);
+            mapToTravelStyle(profileRequestDto, profile);
+            mapToCity(profileRequestDto, profile);
             return;
         }
 
@@ -61,14 +62,15 @@ public class MatchingService {
                 .province(profileRequestDto.getProvince())
                 .groupType(profileRequestDto.getGroupType())
                 .ageRange(profileRequestDto.getAgeRange())
+                .preferenceGender(profileRequestDto.getPreferenceGender())
                 .build();
 
-        updateTravelStyle(profileRequestDto, newProfile);
-        updateCity(profileRequestDto, newProfile);
+        mapToTravelStyle(profileRequestDto, newProfile);
+        mapToCity(profileRequestDto, newProfile);
         matchingProfileRepository.save(newProfile);
     }
 
-    private void updateTravelStyle(MatchingProfileReqDto profileRequestDto, MatchingProfile profile) {
+    private void mapToTravelStyle(MatchingProfileReqDto profileRequestDto, MatchingProfile profile) {
         if (profileRequestDto.getTravelStyles() != null) {
             profile.getTravelStyles().addAll(
                     profileRequestDto.getTravelStyles().stream()
@@ -78,7 +80,7 @@ public class MatchingService {
         }
     }
 
-    private void updateCity(MatchingProfileReqDto profileRequestDto, MatchingProfile profile) {
+    private void mapToCity(MatchingProfileReqDto profileRequestDto, MatchingProfile profile) {
         if (profileRequestDto.getTravelStyles() != null) {
             profile.getMatchCities().addAll(
                     profileRequestDto.getCities().stream()
@@ -132,8 +134,8 @@ public class MatchingService {
                 .toList();
     }
 
+    // 매칭 프로필 DTO 변환 로직 (페치조인 사용해 최적화)
     private MatchingListProfileResDto convertToResponse(MatchingProfile profile) {
-        // 매칭 프로필을 DTO로 변환하는 로직 (페치조인 사용해 최적화)
         return new MatchingListProfileResDto(
                 profile.getUser().getNickname(),
                 profile.getUser().getProfileImageUrl(),
