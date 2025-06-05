@@ -71,6 +71,7 @@ public class CommentService {
     }
 
     // 댓글 리스트 조회
+    @Transactional(readOnly = true)
     public List<CommentListResDto> getCommetList(Long postId) {
         Optional<List<Comment>> commentList = commentRepository.findByPostIdOrderByCreatedTimeAsc(postId);
 
