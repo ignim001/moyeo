@@ -29,7 +29,7 @@ public class MatchingController {
             @AuthenticationPrincipal CustomOAuth2User userDetails,
             @Valid @RequestBody MatchingProfileReqDto profileRequestDto) {
         matchingService.createMatchProfile(userDetails, profileRequestDto);
-        return ResponseEntity.ok("매칭정보 생성 성공");
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Operation(summary = "특정 사용자 정보 조회 API",

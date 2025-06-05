@@ -1,6 +1,7 @@
 package com.example.capstone.matching.repository;
 
 import com.example.capstone.matching.entity.*;
+import com.example.capstone.user.entity.Gender;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +37,12 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
                         cityEq(profile.getMatchCities()),
                         groupTypeEq(profile.getGroupType()),
                         ageRangeEq(profile.getAgeRange()),
-                        travelStyleEq(profile.getTravelStyles())
+                        travelStyleEq(profile.getTravelStyles()),
+                        preferenceGenderEq(profile.getPreferenceGender())
                 )
                 .fetch();
     }
+
 
     private BooleanExpression notSelf(Long profileId) {
         return matchingProfile.id.ne(profileId);
@@ -80,6 +83,19 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
         }
     }
 
+    private BooleanExpression cityEq(List<MatchCity> cites) {
+        if (cites == null || cites.isEmpty()) {
+            return null;
+        }
+        // NONE 필터 처리
+        List<City> cities = cites.stream()
+                .map(MatchCity::getCity)
+                .filter(city -> city != null && !city.equals(City.NONE))
+                .collect(Collectors.toList());
+
+        return cities.isEmpty() ? null : matchCity.city.in(cities);
+    }
+
     private BooleanExpression travelStyleEq(List<MatchTravelStyle> travelStyles) {
         if (travelStyles == null || travelStyles.isEmpty()) {
             return null;
@@ -93,16 +109,8 @@ public class MatchingProfileRepositoryCustomImpl implements MatchingProfileRepos
         return styles.isEmpty() ? null : matchTravelStyle.travelStyle.in(styles);
     }
 
-    private BooleanExpression cityEq(List<MatchCity> cites) {
-        if (cites == null || cites.isEmpty()) {
-            return null;
-        }
-        // NONE 필터 처리
-        List<City> cities = cites.stream()
-                .map(MatchCity::getCity)
-                .filter(city -> city != null && !city.equals(City.NONE))
-                .collect(Collectors.toList());
-
-        return cities.isEmpty() ? null : matchCity.city.in(cities);
+    private BooleanExpression preferenceGenderEq(PreferenceGender preferenceGender) {
+        Gender gender = (preferenceGender != null && preferenceGender != PreferenceGender.NONE) ? preferenceGender.toGender() : null;
+        return (gender != null) ? userEntity.gender.eq(gender) : null;
     }
 }
