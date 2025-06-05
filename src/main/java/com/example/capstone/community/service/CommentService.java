@@ -76,6 +76,7 @@ public class CommentService {
 
         return commentList.map(comments -> comments.stream()
                 .map(comment -> CommentListResDto.builder()
+                        .commentId(comment.getId())
                         .nickname(comment.getUser().getNickname())
                         .userProfile(comment.getUser().getProfileImageUrl())
                         .comment(comment.getComment())

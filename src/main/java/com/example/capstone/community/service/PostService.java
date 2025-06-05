@@ -128,6 +128,7 @@ public class PostService {
     }
 
     // 게시글 리스트 조회
+    @Transactional(readOnly = true)
     public PagingPostListResDto getPostList(Pageable pageable) {
         Slice<Post> postList = postRepository.findAll(pageable);
 
@@ -150,6 +151,7 @@ public class PostService {
     }
 
     // 게시글 필터 조회
+    @Transactional(readOnly = true)
     public PagingPostListResDto getFilterPostList(Pageable pageable, String title, Province province, City city) {
         Slice<PostListResDto> postFilterList = postRepository.findAllByFilter(pageable, title, province, city);
 
