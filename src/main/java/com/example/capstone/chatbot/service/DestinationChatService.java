@@ -62,7 +62,11 @@ public class DestinationChatService {
                 .map(place -> {
                     try {
                         String prompt = foodPromptBuilder.build(place);
+                        System.out.println("🟡 [GPT 요청 프롬프트]");
+                        System.out.println(prompt);
                         String response = openAiClient.callGpt(prompt);
+                        System.out.println("🟢 [GPT 응답]");
+                        System.out.println(response);
                         return objectMapper.readValue(response, FoodResDto.class);
                     } catch (Exception e) {
                         throw new RuntimeException("Food GPT 처리 실패: " + place.getPlaceName(), e);

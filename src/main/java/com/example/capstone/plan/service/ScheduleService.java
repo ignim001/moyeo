@@ -44,7 +44,7 @@ public class ScheduleService {
     private final GptCostAndTimePromptBuilder costAndTimePromptBuilder;
     private final GptRecreatePromptBuilder gptRecreatePromptBuilder;
     private final OpenAiClient openAiClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final KakaoMapClient kakaoMapClient;
     private final ScheduleRepository scheduleRepository;
     private final DayRepository dayRepository;
@@ -68,8 +68,9 @@ public class ScheduleService {
 
         String costPrompt = costAndTimePromptBuilder.build(places);
         String costResponse = openAiClient.callGpt(costPrompt);
-        List<PlaceResponse> responses = costAndTimePromptBuilder.parseGptResponse(costResponse, places);
-        List<PlaceDetailDto> enrichedPlaces = responses.stream().map(PlaceResponse::toDto).toList();
+        List<FullScheduleResDto.PlaceResponse> finalPlaces =
+                scheduleRefinerService.parseGptResponse(costResponse, places);
+        List<PlaceDetailDto> enrichedPlaces = finalPlaces.stream().map(PlaceResponse::toDto).toList();
 
         Map<Integer, List<PlaceDetailDto>> groupedByDayIndex = new LinkedHashMap<>();
         int days = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
@@ -270,7 +271,7 @@ public class ScheduleService {
         String costPrompt = costAndTimePromptBuilder.build(refinedPlaces);
         String costResponse = openAiClient.callGpt(costPrompt);
         List<FullScheduleResDto.PlaceResponse> finalPlaces =
-                costAndTimePromptBuilder.parseGptResponse(costResponse, refinedPlaces);
+                scheduleRefinerService.parseGptResponse(costResponse, refinedPlaces);
 
         long nights = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
         long days = nights + 1;

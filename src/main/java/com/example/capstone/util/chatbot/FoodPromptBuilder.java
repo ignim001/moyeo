@@ -22,12 +22,13 @@ public class FoodPromptBuilder {
             2. 1인당 가격대 (예: 9,000원 ~ 12,000원)
             3. 영업시간 (정기적인 요일별 패턴)
 
-            반드시 지켜야 할 조건:
-            - JSON 외 어떤 문장도 포함하지 마세요 (마크다운, 코드블럭, 안내문 등 모두 금지)
-            - 응답은 아래 JSON 형식으로 정확히 구성해야 합니다.
-            - 각 필드는 반드시 값이 있어야 하며, null 또는 빈 문자열 금지
-            - 모든 정보는 최대한 구체적으로 작성하세요
+            ⚠️ 반드시 아래 형식의 JSON 객체 **하나만 정확히** 반환하세요.
+            - 설명 문장, 안내 텍스트, 마크다운(예: ```json) 절대 포함 금지
+            - 응답은 반드시 `{` 로 시작하고 `}`로 끝나는 단일 JSON 객체여야 합니다.
+            - JSON 외 텍스트가 포함되면 잘못된 응답으로 간주합니다.
+            - 모든 필드는 반드시 **null/빈 문자열 없이 구체적인 값**을 채워야 합니다.
 
+            응답 형식:
             {
               "name": "%s",
               "menu": "", 
@@ -35,13 +36,8 @@ public class FoodPromptBuilder {
               "location": "%s",
               "hours": ""
             }
-        ⚠️ 반드시 위 JSON 형식 그대로 응답해야 하며, 다음을 절대 포함하지 마세요:
-        - 마크다운(```)
-        - 설명 문장
-        - 기타 안내 문구
-
-        단순 JSON 객체 하나만 반환하세요.
-        """,    place.getPlaceName(),
+            """,
+                place.getPlaceName(),
                 place.getAddress(),
                 place.getPhone() == null ? "정보 없음" : place.getPhone(),
                 place.getCategoryGroupCode(),
@@ -52,3 +48,4 @@ public class FoodPromptBuilder {
         );
     }
 }
+

@@ -1,9 +1,11 @@
 package com.example.capstone.plan.service;
 
 
+import com.example.capstone.plan.dto.common.FromPreviousDto;
 import com.example.capstone.plan.dto.common.GptPlaceDto;
 import com.example.capstone.plan.dto.common.KakaoPlaceDto;
 import com.example.capstone.plan.dto.common.PlaceDetailDto;
+import com.example.capstone.plan.dto.response.FullScheduleResDto;
 import com.example.capstone.plan.entity.TravelDay;
 import com.example.capstone.plan.entity.TravelPlace;
 import com.example.capstone.plan.repository.DayRepository;
@@ -182,26 +184,70 @@ public class ScheduleRefinerService {
         return name.replaceAll("(관람|체험|산책|투어|탐방|감상|방문|구경|트래킹)$", "").trim();
     }
 
+    public List<FullScheduleResDto.PlaceResponse> parseGptResponse(String json, List<PlaceDetailDto> baseList) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(json);
+        if (!root.has("places") || !root.get("places").isArray()) {
+            throw new IllegalArgumentException(" GPT 응답에 'places' 배열이 없습니다.");
+        }
 
-        public List<PlaceDetailDto> getScheduleById(Long scheduleId) {
-            // 1. scheduleId에 해당하는 dayId 목록 조회
-            List<Long> dayIds = dayRepository.findAllByTravelScheduleId(scheduleId)
-                    .stream()
-                    .map(TravelDay::getId)
-                    .toList();
+        JsonNode placesNode = root.get("places");
 
-            if (dayIds.isEmpty()) {
-                return List.of(); // 빈 리스트 반환
+        List<FullScheduleResDto.PlaceResponse> result = new ArrayList<>();
+        for (int i = 0; i < placesNode.size(); i++) {
+            JsonNode p = placesNode.get(i);
+            PlaceDetailDto base = baseList.get(i);
+
+            int estimatedCost = p.has("estimatedCost") ? p.get("estimatedCost").asInt() : 0;
+
+            FromPreviousDto fromPrevious = null;
+            if (p.has("fromPrevious")) {
+                JsonNode t = p.get("fromPrevious");
+                fromPrevious = new FromPreviousDto(
+                        t.has("walk") ? t.get("walk").asInt() : 0,
+                        t.has("publicTransport") ? t.get("publicTransport").asInt() : 0,
+                        t.has("car") ? t.get("car").asInt() : 0
+                );
             }
 
-            // 2. dayId들에 해당하는 장소 조회
-            List<TravelPlace> travelPlaces = placeRepository.findAllByTravelDayIdInOrderByTravelDayIdAscPlaceOrderAsc(dayIds);
+            FullScheduleResDto.PlaceResponse response = FullScheduleResDto.PlaceResponse.builder()
+                    .name(base.getName())
+                    .type(base.getType())
+                    .address(base.getAddress())
+                    .lat(base.getLat())
+                    .lng(base.getLng())
+                    .description(base.getDescription())
+                    .gptOriginalName(base.getGptOriginalName())
+                    .estimatedCost(estimatedCost)
+                    .fromPrevious(fromPrevious)
+                    .build();
 
-            // 3. 변환하여 반환
-            return travelPlaces.stream()
-                    .map(this::toDto)
-                    .toList();
+            result.add(response);
         }
+
+        return result;
+    }
+
+
+    public List<PlaceDetailDto> getScheduleById(Long scheduleId) {
+        // 1. scheduleId에 해당하는 dayId 목록 조회
+        List<Long> dayIds = dayRepository.findAllByTravelScheduleId(scheduleId)
+                .stream()
+                .map(TravelDay::getId)
+                .toList();
+
+        if (dayIds.isEmpty()) {
+            return List.of(); // 빈 리스트 반환
+        }
+
+        // 2. dayId들에 해당하는 장소 조회
+        List<TravelPlace> travelPlaces = placeRepository.findAllByTravelDayIdInOrderByTravelDayIdAscPlaceOrderAsc(dayIds);
+
+        // 3. 변환하여 반환
+        return travelPlaces.stream()
+                .map(this::toDto)
+                .toList();
+    }
 
     private PlaceDetailDto toDto(TravelPlace travelPlace) {
         return PlaceDetailDto.builder()
@@ -219,6 +265,5 @@ public class ScheduleRefinerService {
 
 
 }
-
 
 
