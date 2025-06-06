@@ -71,11 +71,13 @@ public class CommentService {
     }
 
     // 댓글 리스트 조회
+    @Transactional(readOnly = true)
     public List<CommentListResDto> getCommetList(Long postId) {
         Optional<List<Comment>> commentList = commentRepository.findByPostIdOrderByCreatedTimeAsc(postId);
 
         return commentList.map(comments -> comments.stream()
                 .map(comment -> CommentListResDto.builder()
+                        .commentId(comment.getId())
                         .nickname(comment.getUser().getNickname())
                         .userProfile(comment.getUser().getProfileImageUrl())
                         .comment(comment.getComment())

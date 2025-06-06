@@ -45,7 +45,7 @@ public class PostService {
 
         List<String> imageUriList = new ArrayList<>();
 
-        if(!postImages.isEmpty()) {
+        if(postImages != null && !postImages.isEmpty()) {
             for (MultipartFile postImage : postImages) {
                 String imageUri = imageService.imageUpload(postImage, POST_IMAGE_DIR);
                 imageUriList.add(imageUri);
@@ -128,11 +128,13 @@ public class PostService {
     }
 
     // 게시글 리스트 조회
+    @Transactional(readOnly = true)
     public PagingPostListResDto getPostList(Pageable pageable) {
         Slice<Post> postList = postRepository.findAll(pageable);
 
         List<PostListResDto> postListResDto = postList.stream()
                 .map(post -> PostListResDto.builder()
+                        .postId(post.getId())
                         .title(post.getTitle())
                         .nickname(post.getUser().getNickname())
                         .createdAt(post.getCreatedTime())
@@ -149,6 +151,7 @@ public class PostService {
     }
 
     // 게시글 필터 조회
+    @Transactional(readOnly = true)
     public PagingPostListResDto getFilterPostList(Pageable pageable, String title, Province province, City city) {
         Slice<PostListResDto> postFilterList = postRepository.findAllByFilter(pageable, title, province, city);
 

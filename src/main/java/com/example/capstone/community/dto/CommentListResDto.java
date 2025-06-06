@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class CommentListResDto {
 
+    private Long commentId;
     private String nickname;
     private String userProfile;
     private String comment;
