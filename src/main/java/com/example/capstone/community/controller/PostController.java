@@ -74,9 +74,9 @@ public class PostController {
     @Operation(summary = "게시글 필터 조회", description = "제목, 목적지 기반 게시글 리스트 필터 조회")
     @GetMapping("/filter/list")
     public ResponseEntity<?> getFilterPostList(@PageableDefault(size = 20, sort = "createdTime", direction = Sort.Direction.DESC) Pageable pageable,
-                                               @RequestParam("province") Province province,
-                                               @RequestParam("city")City city,
-                                               @RequestParam("title") String title) {
+                                               @RequestParam(value = "province", required = false) Province province,
+                                               @RequestParam(value = "city", required = false) City city,
+                                               @RequestParam(value = "title", required = false) String title) {
         PagingPostListResDto postFilterList = postService.getFilterPostList(pageable, title, province, city);
         return new ResponseEntity<>(postFilterList, HttpStatus.OK);
     }
