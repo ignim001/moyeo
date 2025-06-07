@@ -44,16 +44,16 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
 
         List<String> imageUriList = new ArrayList<>();
+        String imageUris = null;
 
         if(postImages != null && !postImages.isEmpty()) {
             for (MultipartFile postImage : postImages) {
                 String imageUri = imageService.imageUpload(postImage, POST_IMAGE_DIR);
                 imageUriList.add(imageUri);
             }
+            // Json 배열 직렬화
+            imageUris = objectMapper.writeValueAsString(imageUriList);
         }
-
-        // Json 배열 직렬화
-        String imageUris = objectMapper.writeValueAsString(imageUriList);
 
         Post post = Post.builder()
                 .user(user)
@@ -85,8 +85,12 @@ public class PostService {
     public FullPostResDto getFullPost(Long postId) throws JsonProcessingException {
         Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post Not Found"));
 
-        // Json 배열 역 직렬화
-        List<String> imageUriList = objectMapper.readValue(post.getImageUris(), new TypeReference<>() {});
+        List<String> imageUriList = new ArrayList<>();
+
+        if (post.getImageUris() != null && !post.getImageUris().isEmpty()) {
+            // Json 배열 역 직렬화
+            imageUriList = objectMapper.readValue(post.getImageUris(), new TypeReference<>() {});
+        }
 
         return FullPostResDto.builder()
                 .postId(post.getId())
@@ -124,7 +128,6 @@ public class PostService {
                 String imageUri = imageService.imageUpload(postImage, POST_IMAGE_DIR);
                 newImageUriList.add(imageUri);
             }
-
             // Json 배열 직렬화
             newImageUris = objectMapper.writeValueAsString(newImageUriList);
         }
