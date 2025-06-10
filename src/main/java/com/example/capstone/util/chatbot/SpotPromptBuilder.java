@@ -6,54 +6,37 @@ import org.springframework.stereotype.Component;
 @Component
 public class SpotPromptBuilder {
 
-    public String build(City city, Double latitude, Double longitude) {
-        String intro;
-
+    public String build(int index, City city, Double latitude, Double longitude) {
+        String locationInfo;
         if (city != null) {
-            intro = String.format("[%s] 지역의 여행자에게 추천할만한 관광지 3곳을 아래 조건에 맞춰 알려줘.", city.getDisplayName());
+            locationInfo = String.format("[%s] 지역의 여행자에게 추천할만한 관광지 3곳을 알려줘.", city.getDisplayName());
         } else if (latitude != null && longitude != null) {
-            intro = String.format("사용자의 현재 위치는 위도 %.6f, 경도 %.6f야. 이 위치 근처에서 추천할만한 관광지 3곳을 아래 조건에 맞춰 알려줘.", latitude, longitude);
+            locationInfo = String.format("사용자의 현재 위치는 위도 %.6f, 경도 %.6f야. 이 위치 근처의 관광지 3곳을 추천해줘.", latitude, longitude);
         } else {
-            throw new IllegalArgumentException("City 또는 GPS 좌표 중 하나는 필수입니다.");
+            throw new IllegalArgumentException("City 또는 GPS 좌표 중 하나는 필요합니다.");
         }
 
         return String.format("""
-            [시스템 역할]
-            너는 대한민국 관광지 정보를 전문적으로 제공하는 여행 플래너야.
+        [시스템 역할]
+        너는 대한민국 관광지 정보를 제공하는 여행 가이드야.
 
-            [질문]
-            %s
-
-            [응답 조건]
-            아래 정보를 포함한 JSON 객체 3개를 JSON 배열로 반환해줘:
-
-            - name: 장소명
-            - description: 한줄 설명
-            - hours: 운영시간
-            - fee: 입장료 (없으면 0원)
-            - location: 도로명 주소 또는 지번 주소
-
-            [추천 조건]
-            - KakaoMap에서 실제 검색 가능한 장소만 추천
-            - 자연경관, 박물관, 전통시장, 테마파크, 전망대 등 포함 가능
-
-            [출력 형식 예시]
-            [
-              {
-                "name": "한라산 국립공원",
-                "description": "제주에서 가장 높은 산, 등산 명소",
-                "hours": "09:00 ~ 18:00",
-                "fee": "0원",
-                "location": "제주특별자치도 제주시 1100로"
-              },
-              ...
-            ]
-
-            [주의사항 – 반드시 지켜야 함]
-            - 출력은 오직 JSON 배열만 포함해야 함
-            - 절대로 마크다운(```)이나 코드블럭을 사용하지 마세요
-            - JSON 바깥에 설명 문장, 줄바꿈, 안내 문구 등을 포함하지 마세요
-            - 모든 필드는 빈 문자열이나 null 없이 채워야 함
-        """, intro);
+    [요청]
+     %s 지역의 여행자에게 추천할 관광지 1곳을 알려줘.
+    
+     [출력 조건]
+     아래 형식과 똑같이 JSON 객체 1개만 응답해. 절대 배열([])이나 설명문, 마크다운 등을 추가하지 마.
+     - 이미 언급한 장소와 비슷하거나 동일한 장소는 절대 중복해서 응답하지 마.
+     - 예: "한라산"과 "한라산 국립공원"은 같은 장소로 간주됨.
+    
+     {
+       "name": "불국사",
+       "description": "경주의 대표적인 유네스코 세계문화유산 사찰",
+       "hours": "08:00 ~ 18:00",
+       "fee": "성인 6,000원, 청소년 4,000원",
+       "location": "경북 경주시 불국로 385"
+     }
+    
+    
+        """, locationInfo);
     }
 }

@@ -69,7 +69,6 @@ public class GptRecreatePromptBuilder {
 
 
 [출력 형식]
-- JSON 외 모든 출력 금지 (설명 문장, 마크다운, 백틱 절대 금지)
 - 날짜별 itinerary 배열 구성
 - 각 일정은 travelSchedule 배열에 포함되며, 각 항목은 type, name, description 포함
 - 관광지 또는 액티비티는 location 필드도 포함 (lat, lng는 null)

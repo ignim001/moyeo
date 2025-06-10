@@ -6,35 +6,49 @@ import org.springframework.stereotype.Component;
 @Component
 public class FestivalRecreatePromptBuilder {
 
-    public String build(JsonNode json) {
+    public String build(JsonNode item) {
+        String name = item.path("title").asText();
+        String start = item.path("eventstartdate").asText();
+        String end = item.path("eventenddate").asText();
+        String period = formatDate(start) + " ~ " + formatDate(end);
+        String location = item.path("addr1").asText("");
+        String fee = item.path("usetimefestival").asText("무료");
+
         return String.format("""
             [시스템 역할]
-            너는 대한민국 축제 정보를 요약 정리해주는 AI 가이드야.
+            너는 대한민국 축제 정보를 요약 정리해주는 AI야.
+
+            [입력된 축제 정보]
+            {
+              "name": "%s",
+              "period": "%s",
+              "location": "%s",
+              "fee": "%s"
+            }
 
             [요청]
-            아래 제공된 축제 정보에서 각 축제의
-            1) 주요 행사 내용 (highlight)을 간단하고 정확하게 요약하고,
-            2) 입장료 (fee) 항목도 반드시 추정하여 "무료" 또는 "일부 유료" 중 하나로 작성해줘.
-            
-            [출력 조건]
-            - JSON 배열만 출력 (마크다운 백틱, 설명문, 주석 등 금지)
-            - 출력은 JSON 배열로 시작하고 JSON 배열로 끝나야 함
-            - 모든 필드는 null 또는 빈 문자열 없이 반드시 채워야 함
+            위 축제의 주요 행사 내용을 highlight 필드로 작성해줘.  
+            다른 필드는 그대로 유지하고, highlight만 추가해.  
+            반드시 아래 JSON 형식 그대로 정확히 응답해.
 
-            [입력 데이터]
-            %s
+            [응답 형식]
+            {
+              "name": "%s",
+              "period": "%s",
+              "location": "%s",
+              "fee": "%s",
+              "highlight": "주요 행사 내용"
+            }
 
-            [출력 형식 예시]
-            [
-              {
-                "name": "청주문화제",
-                "period": "2025.06.01 ~ 2025.06.05",
-                "location": "청주 예술의 전당",
-                "fee": "무료",
-                "highlight": "전통 공연과 거리 퍼레이드 중심의 시민 참여형 축제"
-              },
-              ...
-            ]
-            """, json.toPrettyString());
+            [응답 규칙]
+            - ✅ JSON 객체 하나만 반환해야 함 (배열 금지)
+            - ✅ 마크다운, 설명문, 주석, 코드블럭 등은 절대 포함하지 말 것
+            - ✅ highlight는 1문장으로 핵심만 담아 작성
+            """, name, period, location, fee, name, period, location, fee);
+    }
+
+    private String formatDate(String yyyymmdd) {
+        if (yyyymmdd == null || yyyymmdd.length() != 8) return yyyymmdd;
+        return yyyymmdd.substring(0, 4) + "." + yyyymmdd.substring(4, 6) + "." + yyyymmdd.substring(6, 8);
     }
 }

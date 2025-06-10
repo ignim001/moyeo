@@ -44,12 +44,7 @@ public class ChatBotController {
         ChatCategory category = request.getCategory();
 
         return switch (category) {
-            case SPOT -> {
-                String prompt = spotPromptBuilder.build(city, null, null);
-                String response = openAiClient.callGpt(prompt);
-                Object parsed = parseService.parseResponse(category, response);
-                yield ResponseEntity.ok(parsed);
-            }
+            case SPOT -> ResponseEntity.ok(destinationChatService.getSpot(city));
             case FESTIVAL -> ResponseEntity.ok(destinationChatService.getFestivalList(city));
             case FOOD -> ResponseEntity.ok(destinationChatService.getFoodList(city));
             case HOTEL -> ResponseEntity.ok(destinationChatService.getHotelList(city));
@@ -67,12 +62,7 @@ public class ChatBotController {
         ChatCategory category = request.getCategory();
 
         return switch (category) {
-            case SPOT -> {
-                String prompt = spotPromptBuilder.build(null, lat, lng);
-                String gptResponse = openAiClient.callGpt(prompt);
-                Object parsed = parseService.parseResponse(category, gptResponse);
-                yield ResponseEntity.ok(parsed);
-            }
+            case SPOT -> ResponseEntity.ok(gpsChatService.getSpotList(lat, lng));
             case FESTIVAL -> ResponseEntity.ok(gpsChatService.getFestivalList(lat, lng));
             case FOOD -> ResponseEntity.ok(gpsChatService.getFoodList(lat, lng));
             case HOTEL -> ResponseEntity.ok(gpsChatService.getHotelList(lat, lng));
@@ -86,12 +76,7 @@ public class ChatBotController {
 
         try {
             return switch (category) {
-                case SPOT -> {
-                    String prompt = spotRecreatePromptBuilder.build(req.getCity(), null, null, req.getExcludedNames());
-                    String response = openAiClient.callGpt(prompt);
-                    Object parsed = parseService.parseResponse(category, response);
-                    yield ResponseEntity.ok(parsed);
-                }
+                case SPOT -> ResponseEntity.ok(destinationChatRecreateService.recreateSpot(req));
                 case FESTIVAL -> ResponseEntity.ok(destinationChatRecreateService.recreateFestival(req));
                 case FOOD -> ResponseEntity.ok(destinationChatRecreateService.recreateFood(req));
                 case HOTEL -> ResponseEntity.ok(destinationChatRecreateService.recreateHotel(req));
@@ -112,12 +97,7 @@ public class ChatBotController {
 
         try {
             return switch (category) {
-                case SPOT -> {
-                    String prompt = spotRecreatePromptBuilder.build(null, lat, lng, excluded);
-                    String response = openAiClient.callGpt(prompt);
-                    Object parsed = parseService.parseResponse(category, response);
-                    yield ResponseEntity.ok(parsed);
-                }
+                case SPOT -> ResponseEntity.ok(gpsChatRecreateService.recreateSpot(lat, lng, excluded));
                 case FESTIVAL -> ResponseEntity.ok(gpsChatRecreateService.recreateFestival(lat, lng, excluded));
                 case FOOD -> ResponseEntity.ok(gpsChatRecreateService.recreateFood(lat, lng, excluded));
                 case HOTEL -> ResponseEntity.ok(gpsChatRecreateService.recreateHotel(lat, lng, excluded));

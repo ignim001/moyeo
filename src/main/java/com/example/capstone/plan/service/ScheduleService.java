@@ -24,6 +24,7 @@ import com.example.capstone.util.gpt.GptPlaceDescriptionPromptBuilder;
 import com.example.capstone.util.gpt.GptRecreatePromptBuilder;
 import com.example.capstone.util.gpt.GptScheduleStructurePromptBuilder;
 import com.example.capstone.util.oauth2.dto.CustomOAuth2User;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -97,22 +98,16 @@ public class ScheduleService {
         return new FullScheduleResDto(title, request.getStartDate(), request.getEndDate(), blocks);
     }
 
+
     private Map<String, String> parseDescriptionMap(String gptResponse) {
-        Map<String, String> map = new LinkedHashMap<>();
-        try (Scanner scanner = new Scanner(gptResponse)) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine().trim();
-                if (line.startsWith("-")) {
-                    line = line.substring(1).trim();
-                    String[] parts = line.split(":", 2);
-                    if (parts.length == 2) {
-                        map.put(parts[0].trim(), parts[1].trim());
-                    }
-                }
-            }
+        try {
+            return objectMapper.readValue(gptResponse, new TypeReference<>() {});
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new HashMap<>();
         }
-        return map;
     }
+
 
 
 

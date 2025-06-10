@@ -35,6 +35,7 @@ public class OpenAiClient {
             String requestBody = objectMapper.writeValueAsString(
                     Map.of(
                             "model", "gpt-4o",
+                            "response_format", Map.of("type", "json_object"),
                             "messages", List.of(
                                     Map.of("role", "user", "content", prompt)
                             )

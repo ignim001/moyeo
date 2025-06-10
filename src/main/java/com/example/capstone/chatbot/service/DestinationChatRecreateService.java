@@ -7,6 +7,7 @@ import com.example.capstone.chatbot.dto.response.HotelResDto;
 import com.example.capstone.chatbot.dto.response.SpotResDto;
 import com.example.capstone.chatbot.entity.ChatCategory;
 import com.example.capstone.plan.dto.common.KakaoPlaceDto;
+import com.example.capstone.plan.entity.City;
 import com.example.capstone.plan.service.KakaoMapClient;
 import com.example.capstone.plan.service.OpenAiClient;
 import com.example.capstone.util.chatbot.recreate.*;
@@ -15,7 +16,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,7 @@ public class DestinationChatRecreateService {
     private final FoodRecreatePromptBuilder foodRecreatePromptBuilder;
     private final HotelRecreatePromptBuilder hotelRecreatePromptBuilder;
     private final FestivalRecreatePromptBuilder festivalRecreatePromptBuilder;
+    private final SpotRecreatePromptBuilder spotRecreatePromptBuilder;
 
 
     public List<FoodResDto> recreateFood(ChatBotRecreateReqDto req) {
@@ -68,23 +73,76 @@ public class DestinationChatRecreateService {
                 })
                 .toList();
     }
+
     public List<FestivalResDto> recreateFestival(ChatBotRecreateReqDto req) {
         try {
-            // 1. 필터링된 축제 목록 가져오기
+            // 1. TourAPI에서 제외된 이름을 반영해 축제 목록 가져오기
             JsonNode filteredJson = tourApiClient.getFestivalListByCityExcluding(
                     req.getCity(),
                     LocalDate.now(),
                     req.getExcludedNames()
             );
+            List<JsonNode> rawFestivals = extractFestivalItems(filteredJson);
 
-            // 2. 프롬프트 생성 및 GPT 호출
-            String prompt = festivalRecreatePromptBuilder.build(filteredJson);
-            String gptResponse = openAiClient.callGpt(prompt);
+            // 2. GPT로 각 축제에 대해 요약 요청
+            List<FestivalResDto> result = new ArrayList<>();
+            for (JsonNode item : rawFestivals) {
+                String prompt = festivalRecreatePromptBuilder.build(item); // buildSingle → build (이름만 정리)
+                String gptResponse = openAiClient.callGpt(prompt);
 
-            // 3. 응답 파싱
-            return (List<FestivalResDto>) parseService.parseResponse(ChatCategory.FESTIVAL, gptResponse);
+                try {
+                    FestivalResDto dto = (FestivalResDto) parseService.parseResponse(ChatCategory.FESTIVAL, gptResponse);
+                    result.add(dto);
+                } catch (Exception e) {
+                    System.err.println("❌ GPT 축제 파싱 실패: " + e.getMessage());
+                }
+
+                if (result.size() >= 3) break;
+            }
+
+            return result;
+
         } catch (Exception e) {
-            throw new RuntimeException("축제 재조회 GPT 파싱 실패", e);
+            throw new RuntimeException("축제 재조회 GPT 처리 실패", e);
         }
     }
+
+    private List<JsonNode> extractFestivalItems(JsonNode responseJson) {
+        if (responseJson.isArray()) {
+            return StreamSupport.stream(responseJson.spliterator(), false).collect(Collectors.toList());
+        }
+        return List.of();
+    }
+
+
+
+    public List<SpotResDto> recreateSpot(ChatBotRecreateReqDto req) throws Exception {
+        City city = req.getCity();
+        List<String> excludedNames = new ArrayList<>(req.getExcludedNames());
+        List<SpotResDto> result = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+            String prompt = spotRecreatePromptBuilder.build(i, city, null, null, excludedNames);
+            String response = openAiClient.callGpt(prompt);
+
+            SpotResDto dto;
+            try {
+                dto = (SpotResDto) parseService.parseResponse(ChatCategory.SPOT, response);
+            } catch (Exception e) {
+                i--; // 파싱 실패 시 재시도
+                continue;
+            }
+
+            if (excludedNames.contains(dto.getName())) {
+                i--; // 동일 이름 중복이면 다시 시도
+                continue;
+            }
+
+            result.add(dto);
+            excludedNames.add(dto.getName());
+        }
+
+        return result;
+    }
+
 }

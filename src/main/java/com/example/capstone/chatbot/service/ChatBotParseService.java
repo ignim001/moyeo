@@ -17,16 +17,16 @@ public class ChatBotParseService {
 
     public Object parseResponse(ChatCategory category, String gptResponse) throws Exception {
         return switch (category) {
-            case SPOT -> parse(gptResponse, new TypeReference<List<SpotResDto>>() {});
+            case SPOT -> parse(gptResponse, new TypeReference<SpotResDto>() {});
             case FOOD -> parse(gptResponse, new TypeReference<List<FoodResDto>>() {});
             case HOTEL -> parse(gptResponse, new TypeReference<List<HotelResDto>>() {});
-            case FESTIVAL -> parse(gptResponse, new TypeReference<List<FestivalResDto>>() {});
+            case FESTIVAL -> parse(gptResponse, new TypeReference<FestivalResDto>() {});
             case WEATHER -> parse(gptResponse, new TypeReference<WeatherResDto>() {});
         };
 
     }
 
-    private <T> T parse(String json, TypeReference<T> typeRef) throws Exception {
+    public  <T> T parse(String json, TypeReference<T> typeRef) throws Exception {
         return objectMapper.readValue(json, typeRef);
     }
 }
